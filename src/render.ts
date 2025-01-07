@@ -10,8 +10,24 @@ export default class Render {
     const dpr = window.devicePixelRatio || 1;
     this.canvas.width = window.innerWidth * dpr;
     this.canvas.height = window.innerHeight * dpr;
+    this.canvas.style.width = window.innerWidth + "px";
+    this.canvas.style.height = window.innerHeight + "px";
 
     this.ctx.scale(dpr, dpr);
+  }
+
+  clear() {
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+  }
+
+  offset(camera: Camera) {
+    this.ctx.save();
+    this.ctx.scale(camera.zoom, camera.zoom);
+    this.ctx.translate(camera.position.x, camera.position.y);
+  }
+
+  endOffset() {
+    this.ctx.restore();
   }
 
   applyStyle(style: RenderStyle) {

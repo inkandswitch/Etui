@@ -19,20 +19,6 @@ export default class Capture {
 
   constructor(strokes: Strokes) {
     this.strokes = strokes;
-
-    window.addEventListener("mousedown", (e) => {
-      // @ts-ignore
-      if (e.target.nodeName != "CANVAS") return; // don't care about non-canvas clicks
-      this.startStroke(e.clientX, e.clientY);
-    });
-
-    window.addEventListener("mousemove", (e) => {
-      this.extendStroke(e.clientX, e.clientY);
-    });
-
-    window.addEventListener("mouseup", (e) => {
-      this.endStroke(e.clientX, e.clientY);
-    });
   }
 
   recompute() {
@@ -118,7 +104,7 @@ export default class Capture {
     }
 
     if (this.stroke) {
-      this.stroke.render(r);
+      this.stroke.render(r, this.debugRender);
 
       if (this.captureBuffer.length > 1) {
         const first = this.captureBuffer[0];

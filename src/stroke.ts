@@ -4,8 +4,8 @@ import { Point, Vec } from "./geom";
 export class Strokes {
   strokes: Array<Stroke> = [];
 
-  step: number = 2;
-  debugRender: boolean = false;
+  step: number = 1;
+  debugRender: boolean = true;
 
   addStroke(stroke: Stroke) {
     this.strokes.push(stroke);
