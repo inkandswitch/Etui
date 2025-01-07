@@ -1,57 +1,67 @@
 import m from "mithril";
-import Config from "./config";
+import Capture from "./capture";
 
 export default class SettingsPanel {
   panel: HTMLDivElement;
 
-  constructor() {
+  constructor(capture: Capture) {
     this.panel = document.createElement("div");
     document.body.appendChild(this.panel);
-    m.mount(this.panel, Wrapper);
+    m.mount(this.panel, Panel(capture));
   }
 }
 
-const Wrapper = {
-  view() {
-    return m(".settings_panel", [
-      m(Section, {
-        title: "Point Reduction",
-        childeren: [
-          row(
-            "Epsilon",
-            m("input", {
-              type: "range",
-              min: "0",
-              max: "5",
-              step: "0.05",
-              value: Config.simplifyEpsilon,
-              oninput: (e: any) => {
-                Config.simplifyEpsilon = e.target.value;
-                window.capture.recompute();
-              },
-            }),
-          ),
-          row(
-            "Split point",
-            m(
-              "select",
-              {
-                oninput: (e: any) => {
-                  Config.simplifyAlgorithm = e.target.value;
-                  window.capture.recompute();
-                },
-              },
-              [m("option", "furthest"), m("option", "last")],
+const Panel = (capture: Capture) => {
+  return {
+    view() {
+      return m(".settings_panel", [
+        m(Section, {
+          title: "Linear approximation",
+          childeren: [
+            row(
+              "Debug Render",
+              m("input", {
+                type: "checkbox",
+                checked: capture.debugRender,
+                oninput: (e: any) => (capture.debugRender = e.target.checked),
+              }),
             ),
-          ),
-        ],
-      }),
-    ]);
-  },
+            row(
+              "Epsilon",
+              m("input", {
+                type: "range",
+                min: "0",
+                max: "5",
+                step: "0.05",
+                value: capture.epsilon,
+                oninput: (e: any) => {
+                  capture.epsilon = e.target.value;
+                  capture.recompute();
+                },
+              }),
+            ),
+            row(
+              "Split point",
+              m(
+                "select",
+                {
+                  oninput: (e: any) => {
+                    capture.algorithm = e.target.value;
+                    capture.recompute();
+                  },
+                },
+                [m("option", "furthest"), m("option", "last")],
+              ),
+            ),
+          ],
+        }),
+      ]);
+    },
+  };
 };
 
 const Section = {
-  open: true,
+  open: false,
   view(vnode: any) {
     const attrs = vnode.attrs;
     return m(".settings_section", [

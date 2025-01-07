@@ -4,11 +4,11 @@ import Capture from "./capture";
 import Stroke from "./stroke";
 
 const strokes: Array<Stroke> = [];
-const panel = new SettingsPanel();
-const render = new Render();
-
 const capture = new Capture(strokes);
-window.capture = capture;
+
+const panel = new SettingsPanel(capture);
+
+const render = new Render();
 
 // Tick
 function tick() {

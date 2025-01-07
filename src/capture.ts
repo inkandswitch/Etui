@@ -1,7 +1,6 @@
 import Render, { fill, stroke } from "./render";
 import Stroke from "./stroke";
 import { Point, Vec } from "./geom";
-import Config from "./config";
 
 // Takes input and creates a new stroke object
 // Simplifies the input to a series of points
@@ -12,6 +11,11 @@ export default class Capture {
   stroke: Stroke | null = null;
 
   strokes: Array<Stroke>;
+
+  // Config
+  epsilon = 0.5;
+  algorithm = "furthest";
+  debugRender = true;
 
   constructor(strokes: Array<Stroke>) {
     this.strokes = strokes;
@@ -69,12 +73,12 @@ export default class Capture {
       const [error, maxErrorIndex] = linearApproximationError(
         this.captureBuffer,
       );
-      if (error > Config.simplifyEpsilon) {
-        if (Config.simplifyAlgorithm == "last") {
+      if (error > this.epsilon) {
+        if (this.algorithm == "last") {
           let prev = this.captureBuffer[this.captureBuffer.length - 2];
           this.stroke.addPoint(prev.x, prev.y);
           this.captureBuffer = [prev, { x, y }];
-        } else if (Config.simplifyAlgorithm == "furthest") {
+        } else if (this.algorithm == "furthest") {
           let appendPoint = this.captureBuffer[maxErrorIndex];
           this.stroke.addPoint(appendPoint.x, appendPoint.y);
           this.captureBuffer = this.captureBuffer.slice(maxErrorIndex);
@@ -92,13 +96,30 @@ export default class Capture {
   }
 
   render(r: Render) {
+    if (!this.debugRender) return;
+    for (const s of this.strokes.concat(this.stroke ? [this.stroke] : [])) {
+      for (let i = 0; i < s.points.length - 1; i++) {
+        const p1 = s.points[i];
+        const p2 = s.points[i + 1];
+        r.line(p1.x, p1.y, p2.x, p2.y, stroke("red", 0.5));
+      }
+
+      for (const point of s.originalPoints) {
+        r.rect(point.x - 1, point.y - 1, 2, 2, fill("#00000033"));
+      }
+
+      for (const point of s.points) {
+        r.rect(point.x - 1, point.y - 1, 2, 2, fill("red"));
+      }
+    }
+
     if (this.stroke) {
       this.stroke.render(r);
 
       if (this.captureBuffer.length > 1) {
         const first = this.captureBuffer[0];
         const last = this.captureBuffer[this.captureBuffer.length - 1];
-        r.line(first.x, first.y, last.x, last.y, stroke("red", 1));
+        r.line(first.x, first.y, last.x, last.y, stroke("blue", 1));
       }
     }
   }
