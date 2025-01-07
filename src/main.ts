@@ -1,12 +1,12 @@
 import SettingsPanel from "./settings-panel";
 import Render from "./render";
 import Capture from "./capture";
-import Stroke from "./stroke";
+import Stroke, { Strokes } from "./stroke";
 
-const strokes: Array<Stroke> = [];
+const strokes = new Strokes();
 const capture = new Capture(strokes);
 
-const panel = new SettingsPanel(capture);
+const panel = new SettingsPanel(capture, strokes);
 
 const render = new Render();
 
@@ -14,9 +14,7 @@ const render = new Render();
 function tick() {
   render.ctx.clearRect(0, 0, render.canvas.width, render.canvas.height);
 
-  for (const stroke of strokes) {
-    stroke.render(render);
-  }
+  strokes.render(render);
 
   capture.render(render);
   requestAnimationFrame(tick);

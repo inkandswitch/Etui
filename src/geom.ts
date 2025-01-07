@@ -25,3 +25,6 @@ Vec.project = (a: Vec, b: Vec): Vec => {
 };
 
 Vec.len = (a: Vec): number => Math.sqrt(a.x * a.x + a.y * a.y);
+
+Vec.lerp = (a: Vec, b: Vec, t: number): Vec =>
+  Vec(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t);

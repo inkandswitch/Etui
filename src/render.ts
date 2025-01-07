@@ -45,6 +45,18 @@ export default class Render {
       this.ctx.strokeRect(x, y, w, h);
     }
   }
+
+  circle(x: number, y: number, r: number, style: RenderStyle) {
+    this.applyStyle(style);
+    this.ctx.beginPath();
+    this.ctx.arc(x, y, r, 0, 2 * Math.PI);
+    if (style.doFill) {
+      this.ctx.fill();
+    }
+    if (style.doStroke) {
+      this.ctx.stroke();
+    }
+  }
 }
 
 export type RenderStyle = {

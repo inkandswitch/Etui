@@ -1,17 +1,18 @@
 import m from "mithril";
 import Capture from "./capture";
+import Stroke, { Strokes } from "./stroke";
 
 export default class SettingsPanel {
   panel: HTMLDivElement;
 
-  constructor(capture: Capture) {
+  constructor(capture: Capture, strokes: Strokes) {
     this.panel = document.createElement("div");
     document.body.appendChild(this.panel);
-    m.mount(this.panel, Panel(capture));
+    m.mount(this.panel, Panel(capture, strokes));
   }
 }
 
-const Panel = (capture: Capture) => {
+const Panel = (capture: Capture, strokes: Strokes) => {
   return {
     view() {
       return m(".settings_panel", [
@@ -52,6 +53,33 @@ const Panel = (capture: Capture) => {
                 },
                 [m("option", "furthest"), m("option", "last")],
               ),
+            ),
+          ],
+        }),
+        m(Section, {
+          title: "Resampling",
+          childeren: [
+            row(
+              "Debug Render",
+              m("input", {
+                type: "checkbox",
+                checked: strokes.debugRender,
+                oninput: (e: any) => (strokes.debugRender = e.target.checked),
+              }),
+            ),
+            row(
+              "Step Size",
+              m("input", {
+                type: "range",
+                min: "0.5",
+                max: "10",
+                step: ".5",
+                value: strokes.step,
+                oninput: (e: any) => {
+                  strokes.step = parseFloat(e.target.value);
+                  strokes.rebuildInklets();
+                },
+              }),
             ),
           ],
         }),

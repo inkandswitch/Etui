@@ -1,5 +1,5 @@
 import Render, { fill, stroke } from "./render";
-import Stroke from "./stroke";
+import Stroke, { Strokes } from "./stroke";
 import { Point, Vec } from "./geom";
 
 // Takes input and creates a new stroke object
@@ -10,14 +10,14 @@ export default class Capture {
 
   stroke: Stroke | null = null;
 
-  strokes: Array<Stroke>;
+  strokes: Strokes;
 
   // Config
   epsilon = 0.5;
   algorithm = "furthest";
   debugRender = true;
 
-  constructor(strokes: Array<Stroke>) {
+  constructor(strokes: Strokes) {
     this.strokes = strokes;
 
     window.addEventListener("mousedown", (e) => {
@@ -37,10 +37,11 @@ export default class Capture {
 
   recompute() {
     // Get old values for all strokes and recompute them
-    for (const stroke of this.strokes) {
+    for (const stroke of this.strokes.strokes) {
       const originalPoints = stroke.originalPoints;
       stroke.points = [];
       stroke.originalPoints = [];
+      stroke.lengths = [];
       let f = originalPoints[0];
       this.stroke = stroke;
       this.stroke.addPoint(f.x, f.y);
@@ -90,14 +91,17 @@ export default class Capture {
   endStroke(x: number, y: number) {
     if (this.stroke) {
       this.stroke.addPoint(x, y);
-      this.strokes.push(this.stroke);
+      this.strokes.addStroke(this.stroke);
+      this.stroke.rebuildInklets();
       this.stroke = null;
     }
   }
 
   render(r: Render) {
     if (!this.debugRender) return;
-    for (const s of this.strokes.concat(this.stroke ? [this.stroke] : [])) {
+    for (const s of this.strokes.strokes.concat(
+      this.stroke ? [this.stroke] : [],
+    )) {
       for (let i = 0; i < s.points.length - 1; i++) {
         const p1 = s.points[i];
         const p2 = s.points[i + 1];
