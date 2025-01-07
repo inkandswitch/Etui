@@ -29,17 +29,20 @@ function tick() {
 tick();
 
 window.addEventListener("mousedown", (e) => {
+  const world = camera.screenToWorld({ x: e.clientX, y: e.clientY });
   // @ts-ignore
   if (e.target.nodeName != "CANVAS") return; // don't care about non-canvas clicks
-  capture.startStroke(e.offsetX, e.offsetY);
+  capture.startStroke(world.x, world.y);
 });
 
 window.addEventListener("mousemove", (e) => {
-  capture.extendStroke(e.offsetX, e.offsetY);
+  const world = camera.screenToWorld({ x: e.clientX, y: e.clientY });
+  capture.extendStroke(world.x, world.y);
 });
 
 window.addEventListener("mouseup", (e) => {
-  capture.endStroke(e.offsetX, e.offsetY);
+  const world = camera.screenToWorld({ x: e.clientX, y: e.clientY });
+  capture.endStroke(world.x, world.y);
 });
 
 window.addEventListener(

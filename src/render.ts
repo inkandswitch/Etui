@@ -1,3 +1,5 @@
+import Camera from "./camera";
+
 export default class Render {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;

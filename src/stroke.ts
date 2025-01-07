@@ -5,7 +5,7 @@ export class Strokes {
   strokes: Array<Stroke> = [];
 
   step: number = 1;
-  debugRender: boolean = true;
+  debugRender: boolean = false;
 
   addStroke(stroke: Stroke) {
     this.strokes.push(stroke);
