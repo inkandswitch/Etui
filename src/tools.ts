@@ -17,7 +17,7 @@ const ToolPanel = (tools: Tools) => {
       return m(".tool_panel", [
         m(Tool(tools, "draw")),
         m(".tool_header", "select"),
-        m(Tool(tools, "select exact")),
+        m(Tool(tools, "select")),
         m(Tool(tools, "select strokes")),
         m(Tool(tools, "select connected")),
       ]);

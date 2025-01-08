@@ -3,6 +3,10 @@ export type Point = {
   y: number;
 };
 
+export function Point(x: number, y: number): Point {
+  return { x, y };
+}
+
 export type StrokePoint = {
   x: number;
   y: number;

@@ -3,6 +3,8 @@ import Tools from "./tools";
 
 import Render from "./render";
 import Capture from "./capture";
+import Select from "./select";
+
 import Stroke, { Strokes } from "./stroke";
 import Camera from "./camera";
 
@@ -10,6 +12,7 @@ const camera = new Camera();
 
 const strokes = new Strokes();
 const capture = new Capture(strokes);
+const select = new Select();
 
 const panel = new SettingsPanel(capture, strokes);
 const tools = new Tools();
@@ -22,8 +25,9 @@ function tick() {
   render.offset(camera);
 
   capture.render(render);
-
   strokes.render(render);
+  select.render(render);
+
   render.endOffset();
 
   requestAnimationFrame(tick);
@@ -49,35 +53,59 @@ window.addEventListener(
 let down = false;
 
 window.addEventListener("pointerdown", (e) => {
-  const world = camera.screenToWorld({ x: e.clientX, y: e.clientY });
   // @ts-ignore
   if (e.target.nodeName != "CANVAS") return; // don't care about non-canvas clicks
+
   down = true;
+
+  // Convert params
+  const world = camera.screenToWorld({ x: e.clientX, y: e.clientY });
+  let pressure = 1;
+  let tiltX = 0;
+  let tiltY = 0;
   if (e.pointerType === "pen") {
-    capture.draw(world.x, world.y, e.pressure, e.tiltX, e.tiltY);
-  } else {
-    capture.draw(world.x, world.y, 1, 0, 0);
+    pressure = e.pressure;
+    tiltX = e.tiltX;
+    tiltY = e.tiltY;
+  }
+
+  if (tools.currentTool == "draw") {
+    capture.draw(world.x, world.y, pressure, tiltX, tiltY);
+  } else if (tools.currentTool == "select") {
+    select.start();
+    select.draw(world.x, world.y);
   }
 });
 
 // stylus input
 document.addEventListener("pointermove", (e) => {
   if (!down) return;
+
+  // Convet params
   const world = camera.screenToWorld({ x: e.clientX, y: e.clientY });
+  let pressure = 1;
+  let tiltX = 0;
+  let tiltY = 0;
   if (e.pointerType === "pen") {
-    capture.draw(world.x, world.y, e.pressure, e.tiltX, e.tiltY);
-  } else {
-    capture.draw(world.x, world.y, 1, 0, 0);
+    pressure = e.pressure;
+    tiltX = e.tiltX;
+    tiltY = e.tiltY;
+  }
+
+  if (tools.currentTool == "draw") {
+    capture.draw(world.x, world.y, pressure, tiltX, tiltY);
+  } else if (tools.currentTool == "select") {
+    select.draw(world.x, world.y);
   }
 });
 
 document.addEventListener("pointerup", (e) => {
   if (!down) return;
   down = false;
-  if (e.pointerType === "pen") {
+  if (tools.currentTool == "draw") {
     capture.end();
-  } else {
-    capture.end();
+  } else if (tools.currentTool == "select") {
+    select.end();
   }
 });
 
