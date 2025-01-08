@@ -5,7 +5,9 @@ export class Strokes {
   strokes: Array<Stroke> = [];
 
   step: number = 1;
+
   debugRender: boolean = true;
+  showPoints: boolean = false;
 
   addStroke(stroke: Stroke) {
     this.strokes.push(stroke);
@@ -13,7 +15,7 @@ export class Strokes {
 
   render(r: Render) {
     for (const stroke of this.strokes) {
-      stroke.render(r, this.debugRender);
+      stroke.render(r, this.debugRender, this.showPoints);
     }
   }
 
@@ -88,7 +90,7 @@ export default class Stroke {
     }
   }
 
-  render(r: Render, debug: boolean) {
+  render(r: Render, debug: boolean, showPoints: boolean) {
     if (debug) {
       // Render line segments
       for (let i = 0; i < this.points.length - 1; i++) {
@@ -97,24 +99,26 @@ export default class Stroke {
         r.line(p1.x, p1.y, p2.x, p2.y, stroke("#0000FF55", 0.5));
       }
 
-      for (const inklet of this.inklets) {
-        r.circle(
-          inklet.x,
-          inklet.y,
-          2 + inklet.pressure * 4,
-          stroke("#0000FF55", 0.5),
-        );
+      if (showPoints) {
+        for (const inklet of this.inklets) {
+          r.circle(
+            inklet.x,
+            inklet.y,
+            2 + inklet.pressure * 4,
+            stroke("#0000FF55", 0.5),
+          );
 
-        // Draw tilt
-        const tilt_x = inklet.tilt_x * (Math.PI / 180);
-        const tilt_y = inklet.tilt_y * (Math.PI / 180);
-        r.line(
-          inklet.x,
-          inklet.y,
-          inklet.x + tilt_x * 10,
-          inklet.y + tilt_y * 10,
-          stroke("#0000FF55", 0.5),
-        );
+          // Draw tilt
+          const tilt_x = inklet.tilt_x * (Math.PI / 180);
+          const tilt_y = inklet.tilt_y * (Math.PI / 180);
+          r.line(
+            inklet.x,
+            inklet.y,
+            inklet.x + tilt_x * 10,
+            inklet.y + tilt_y * 10,
+            stroke("#0000FF55", 0.5),
+          );
+        }
       }
     }
   }

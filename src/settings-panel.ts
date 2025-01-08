@@ -76,6 +76,14 @@ const Panel = (capture: Capture, strokes: Strokes) => {
               }),
             ),
             row(
+              "Show Points",
+              m("input", {
+                type: "checkbox",
+                checked: strokes.showPoints,
+                oninput: (e: any) => (strokes.showPoints = e.target.checked),
+              }),
+            ),
+            row(
               "Step Size",
               m("input", {
                 type: "range",

@@ -32,6 +32,7 @@ export default class Capture {
       let first = originalPoints[0];
       this.stroke = stroke;
       this.stroke.addPoint(first);
+      this.stroke.addPoint(first);
       this.stroke.addOriginalPoint(first);
       this.captureBuffer = [first];
 
@@ -57,6 +58,11 @@ export default class Capture {
   end() {
     if (this.stroke) {
       this.stroke!.rebuildInklets(this.strokes.step);
+      if (this.captureBuffer.length > 0) {
+        let last = this.captureBuffer[this.captureBuffer.length - 1];
+        this.stroke.updateLastPoint(last);
+      }
+
       this.stroke = null;
     }
   }
@@ -85,10 +91,12 @@ export default class Capture {
       if (error > this.epsilon) {
         if (this.algorithm == "last") {
           let prev = this.captureBuffer[this.captureBuffer.length - 2];
+          this.stroke.updateLastPoint(prev);
           this.stroke.addPoint(prev);
           this.captureBuffer = [prev, point];
         } else if (this.algorithm == "furthest") {
           let appendPoint = this.captureBuffer[maxErrorIndex];
+          this.stroke.updateLastPoint(appendPoint);
           this.stroke.addPoint(appendPoint);
           this.captureBuffer = this.captureBuffer.slice(maxErrorIndex);
         }
