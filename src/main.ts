@@ -18,9 +18,9 @@ function tick() {
   render.clear();
   render.offset(camera);
 
-  strokes.render(render);
-
   capture.render(render);
+
+  strokes.render(render);
   render.endOffset();
 
   requestAnimationFrame(tick);
@@ -28,23 +28,7 @@ function tick() {
 
 tick();
 
-window.addEventListener("mousedown", (e) => {
-  const world = camera.screenToWorld({ x: e.clientX, y: e.clientY });
-  // @ts-ignore
-  if (e.target.nodeName != "CANVAS") return; // don't care about non-canvas clicks
-  capture.startStroke(world.x, world.y);
-});
-
-window.addEventListener("mousemove", (e) => {
-  const world = camera.screenToWorld({ x: e.clientX, y: e.clientY });
-  capture.extendStroke(world.x, world.y);
-});
-
-window.addEventListener("mouseup", (e) => {
-  const world = camera.screenToWorld({ x: e.clientX, y: e.clientY });
-  capture.endStroke(world.x, world.y);
-});
-
+// pan & pinch to zoom
 window.addEventListener(
   "wheel",
   (e) => {
@@ -58,6 +42,41 @@ window.addEventListener(
   },
   { passive: false },
 );
+
+let down = false;
+
+window.addEventListener("pointerdown", (e) => {
+  const world = camera.screenToWorld({ x: e.clientX, y: e.clientY });
+  // @ts-ignore
+  if (e.target.nodeName != "CANVAS") return; // don't care about non-canvas clicks
+  down = true;
+  if (e.pointerType === "pen") {
+    capture.draw(world.x, world.y, e.pressure, e.tiltX, e.tiltY);
+  } else {
+    capture.draw(world.x, world.y, 1, 0, 0);
+  }
+});
+
+// stylus input
+document.addEventListener("pointermove", (e) => {
+  if (!down) return;
+  const world = camera.screenToWorld({ x: e.clientX, y: e.clientY });
+  if (e.pointerType === "pen") {
+    capture.draw(world.x, world.y, e.pressure, e.tiltX, e.tiltY);
+  } else {
+    capture.draw(world.x, world.y, 1, 0, 0);
+  }
+});
+
+document.addEventListener("pointerup", (e) => {
+  if (!down) return;
+  down = false;
+  if (e.pointerType === "pen") {
+    capture.end();
+  } else {
+    capture.end();
+  }
+});
 
 window.addEventListener("keydown", (e) => {
   if (e.key == "z") {

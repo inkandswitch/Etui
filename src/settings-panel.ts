@@ -28,6 +28,14 @@ const Panel = (capture: Capture, strokes: Strokes) => {
               }),
             ),
             row(
+              "Show Points",
+              m("input", {
+                type: "checkbox",
+                checked: capture.showPoints,
+                oninput: (e: any) => (capture.showPoints = e.target.checked),
+              }),
+            ),
+            row(
               "Epsilon",
               m("input", {
                 type: "range",
