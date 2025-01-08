@@ -1,4 +1,6 @@
 import SettingsPanel from "./settings-panel";
+import Tools from "./tools";
+
 import Render from "./render";
 import Capture from "./capture";
 import Stroke, { Strokes } from "./stroke";
@@ -10,6 +12,7 @@ const strokes = new Strokes();
 const capture = new Capture(strokes);
 
 const panel = new SettingsPanel(capture, strokes);
+const tools = new Tools();
 
 const render = new Render();
 

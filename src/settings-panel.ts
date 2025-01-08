@@ -1,6 +1,6 @@
 import m from "mithril";
 import Capture from "./capture";
-import Stroke, { Strokes } from "./stroke";
+import { Strokes } from "./stroke";
 
 export default class SettingsPanel {
   panel: HTMLDivElement;
