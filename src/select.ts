@@ -7,6 +7,8 @@ export default class Select {
   slices: Array<StrokeSlice> = [];
   strokes: Strokes;
 
+  mode: "partial" | "stroke" | "connected" = "partial";
+
   constructor(strokes: Strokes) {
     this.strokes = strokes;
   }
@@ -21,8 +23,17 @@ export default class Select {
   }
 
   end() {
-    console.log("Select tool ended");
-    this.findIntersections();
+    this.update();
+  }
+
+  update() {
+    if (this.mode == "partial") {
+      this.findIntersections();
+    }
+    if (this.mode == "stroke") {
+      this.findIntersections();
+      this.selectWholeStrokes();
+    }
   }
 
   findIntersections() {
@@ -32,7 +43,7 @@ export default class Select {
       let lastIntersection = null;
       let lastIntersectionIndex = -1;
 
-      // Check if the start point is inside
+      // Check if the start point is inside the polygon, in which case we start with an intersection
       const start = stroke.points[0];
       const isStartInside = Polygon.isPointInside(this.captureBuffer, start);
       if (isStartInside) {
@@ -42,6 +53,8 @@ export default class Select {
 
       for (let i = 0; i < stroke.points.length - 1; i++) {
         let strokeSegment = Line(stroke.points[i], stroke.points[i + 1]);
+        // TODO: Handle degenerate case where there are multiple intersections for a single segment
+        // TODO: Check if intersection is already in the list, this may happen because line segments share endpoints
         for (let j = 0; j < this.captureBuffer.length; j++) {
           let captureSegment = Line(
             this.captureBuffer[j],
@@ -66,13 +79,11 @@ export default class Select {
               lastIntersection = null;
               lastIntersectionIndex = -1;
             }
-            // TODO: Check if intersection is already in the list
-            // This may happen because line segments share endpoints
           }
         }
       }
 
-      // Check if the last intersection was not closed
+      // Check if the last intersection was not closed, in which case we add the end of the stroke as a slice
       if (lastIntersection) {
         this.slices.push({
           strokeId: parseInt(sid),
@@ -83,6 +94,34 @@ export default class Select {
         });
       }
     }
+  }
+
+  selectWholeStrokes() {
+    const strokes: Set<number> = new Set();
+    for (const slice of this.slices) {
+      strokes.add(slice.strokeId);
+    }
+
+    this.slices = [];
+    for (const sid of strokes) {
+      this.slices.push({
+        strokeId: sid,
+        startIndex: 0,
+        startPosition: this.strokes.strokes[sid].points[0],
+        endIndex: this.strokes.strokes[sid].points.length - 1,
+        endPosition:
+          this.strokes.strokes[sid].points[
+            this.strokes.strokes[sid].points.length - 1
+          ],
+      });
+    }
+  }
+
+  cut() {
+    for (const slice of this.slices) {
+      this.strokes.cut(slice.strokeId, slice.startIndex, slice.endIndex);
+    }
+    this.slices = [];
   }
 
   render(r: Render) {

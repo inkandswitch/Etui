@@ -3,6 +3,7 @@ import m from "mithril";
 export default class Tools {
   panel: HTMLDivElement;
   currentTool: string = "draw";
+  currentAction: string = "";
 
   constructor() {
     this.panel = document.createElement("div");
@@ -16,10 +17,7 @@ const ToolPanel = (tools: Tools) => {
     view() {
       return m(".tool_panel", [
         m(Tool(tools, "draw")),
-        m(".tool_header", "select"),
         m(Tool(tools, "select")),
-        m(Tool(tools, "select strokes")),
-        m(Tool(tools, "select connected")),
       ]);
     },
   };

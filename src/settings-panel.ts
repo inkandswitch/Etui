@@ -1,18 +1,19 @@
 import m from "mithril";
 import Capture from "./capture";
 import { Strokes } from "./stroke";
+import Select from "./select";
 
 export default class SettingsPanel {
   panel: HTMLDivElement;
 
-  constructor(capture: Capture, strokes: Strokes) {
+  constructor(capture: Capture, strokes: Strokes, select: Select) {
     this.panel = document.createElement("div");
     document.body.appendChild(this.panel);
-    m.mount(this.panel, Panel(capture, strokes));
+    m.mount(this.panel, Panel(capture, strokes, select));
   }
 }
 
-const Panel = (capture: Capture, strokes: Strokes) => {
+const Panel = (capture: Capture, strokes: Strokes, select: Select) => {
   return {
     view() {
       return m(".settings_panel", [
@@ -96,6 +97,40 @@ const Panel = (capture: Capture, strokes: Strokes) => {
                   strokes.rebuildInklets();
                 },
               }),
+            ),
+          ],
+        }),
+        m(Section, {
+          title: "Selection",
+          childeren: [
+            row(
+              "mode",
+              m(
+                "select",
+                {
+                  oninput: (e: any) => {
+                    select.mode = e.target.value;
+                    select.update();
+                  },
+                },
+                [
+                  m("option", "partial"),
+                  m("option", "stroke"),
+                  m("option", "connected"),
+                ],
+              ),
+            ),
+            row(
+              "cut",
+              m(
+                "button",
+                {
+                  onclick: () => {
+                    select.cut();
+                  },
+                },
+                "cut",
+              ),
             ),
           ],
         }),
