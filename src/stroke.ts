@@ -96,7 +96,7 @@ export default class Stroke {
       for (let i = 0; i < this.points.length - 1; i++) {
         const p1 = this.points[i];
         const p2 = this.points[i + 1];
-        r.line(p1.x, p1.y, p2.x, p2.y, stroke("#0000FF55", 0.5));
+        r.line(p1.x, p1.y, p2.x, p2.y, stroke("#0000FF22", 0.5));
       }
 
       if (showPoints) {
@@ -105,7 +105,7 @@ export default class Stroke {
             inklet.x,
             inklet.y,
             2 + inklet.pressure * 4,
-            stroke("#0000FF55", 0.5),
+            stroke("#0000FF22", 0.5),
           );
 
           // Draw tilt
@@ -116,7 +116,7 @@ export default class Stroke {
             inklet.y,
             inklet.x + tilt_x * 10,
             inklet.y + tilt_y * 10,
-            stroke("#0000FF55", 0.5),
+            stroke("#0000FF22", 0.5),
           );
         }
       }

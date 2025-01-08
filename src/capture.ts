@@ -61,6 +61,7 @@ export default class Capture {
       if (this.captureBuffer.length > 0) {
         let last = this.captureBuffer[this.captureBuffer.length - 1];
         this.stroke.updateLastPoint(last);
+        this.stroke.rebuildInklets(this.strokes.step);
       }
 
       this.stroke = null;
@@ -160,16 +161,6 @@ export default class Capture {
             stroke("red", 0.5),
           );
         }
-      }
-    }
-
-    if (this.stroke) {
-      this.stroke.render(r, this.debugRender);
-
-      if (this.captureBuffer.length > 1) {
-        const first = this.captureBuffer[0];
-        const last = this.captureBuffer[this.captureBuffer.length - 1];
-        r.line(first.x, first.y, last.x, last.y, stroke("blue", 1));
       }
     }
   }

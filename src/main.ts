@@ -12,7 +12,7 @@ const camera = new Camera();
 
 const strokes = new Strokes();
 const capture = new Capture(strokes);
-const select = new Select();
+const select = new Select(strokes);
 
 const panel = new SettingsPanel(capture, strokes);
 const tools = new Tools();
