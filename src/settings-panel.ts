@@ -104,6 +104,14 @@ const Panel = (capture: Capture, strokes: Strokes, select: Select) => {
           title: "Selection",
           childeren: [
             row(
+              "Debug Render",
+              m("input", {
+                type: "checkbox",
+                checked: select.debugRender,
+                oninput: (e: any) => (select.debugRender = e.target.checked),
+              }),
+            ),
+            row(
               "mode",
               m(
                 "select",

@@ -1,6 +1,6 @@
-import { Line, Point, Polygon } from "./geom";
+import { Line, Point, Polygon, StrokePoint, Vec } from "./geom";
 import Render, { fill, stroke } from "./render";
-import { Strokes } from "./stroke";
+import { Cutpoint, Strokes, StrokeSlice } from "./stroke";
 
 export default class Select {
   captureBuffer: Array<Point> = [];
@@ -8,22 +8,31 @@ export default class Select {
   strokes: Strokes;
 
   mode: "partial" | "stroke" | "connected" = "partial";
+  move: boolean = false;
+  debugRender = true;
 
   constructor(strokes: Strokes) {
     this.strokes = strokes;
   }
 
   start() {
-    this.captureBuffer = [];
+    if (this.move) {
+    } else {
+      this.captureBuffer = [];
+    }
   }
 
   draw(x: number, y: number) {
-    const point = Point(x, y);
-    this.captureBuffer.push(point);
+    if (this.move) {
+    } else {
+      const point = Point(x, y);
+      this.captureBuffer.push(point);
+    }
   }
 
   end() {
     this.update();
+    this.move = true;
   }
 
   update() {
@@ -118,10 +127,37 @@ export default class Select {
   }
 
   cut() {
+    // Sort slices into cutpoints per stroke
+    const cutpointsPerStroke: Map<number, Array<Cutpoint>> = new Map();
     for (const slice of this.slices) {
-      this.strokes.cut(slice.strokeId, slice.startIndex, slice.endIndex);
+      let list = cutpointsPerStroke.get(slice.strokeId);
+      const stroke = this.strokes.strokes[slice.strokeId];
+
+      if (!list) {
+        list = [];
+        cutpointsPerStroke.set(slice.strokeId, list);
+      }
+
+      // Compute the t offset for the cutpoints, which we use for precise cutting
+      list.push({
+        index: slice.startIndex,
+        t:
+          Vec.len(
+            Vec.sub(slice.startPosition, stroke.points[slice.startIndex]),
+          ) / stroke.lengths[slice.startIndex],
+      });
+      list.push({
+        index: slice.endIndex,
+        t:
+          Vec.len(Vec.sub(slice.endPosition, stroke.points[slice.endIndex])) /
+          stroke.lengths[slice.endIndex],
+      });
     }
-    this.slices = [];
+
+    // Cut the strokes
+    for (const [strokeId, cutpoints] of cutpointsPerStroke) {
+      this.strokes.cut(strokeId, cutpoints);
+    }
   }
 
   render(r: Render) {
@@ -145,11 +181,3 @@ export default class Select {
     }
   }
 }
-
-type StrokeSlice = {
-  strokeId: number;
-  startIndex: number;
-  startPosition: Point;
-  endIndex: number;
-  endPosition: Point;
-};

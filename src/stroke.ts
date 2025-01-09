@@ -24,6 +24,51 @@ export class Strokes {
       stroke.rebuildInklets(this.step);
     }
   }
+
+  cut(strokeId: number, cutpoints: Array<Cutpoint>) {
+    // Iterates through each cutpoint and slices the stroke
+    // We insert intermediate points at the cuts
+    // This assumes cutpoints are sorted by index
+
+    const points = this.strokes[strokeId].points;
+
+    let start = 0;
+    let startPoint = null;
+
+    for (const cutpoint of cutpoints) {
+      const index = cutpoint.index;
+      if (index <= points.length) {
+        const slice = points.slice(start, index + 1);
+
+        if (startPoint) {
+          slice.unshift({ ...startPoint }); // Add a copy of the startpoint
+        }
+
+        if (cutpoint.t > 0) {
+          startPoint = StrokePoint.lerp(
+            points[index],
+            points[index + 1],
+            cutpoint.t,
+          );
+          slice.push(startPoint);
+        }
+
+        this.addStroke(new Stroke(slice));
+        start = index + 1;
+      }
+    }
+    // Add the tail of the stroke
+    if (start < points.length) {
+      const slice = points.slice(start);
+      if (startPoint) {
+        slice.unshift(startPoint);
+      }
+      this.addStroke(new Stroke(slice));
+    }
+
+    // Delete the original stroke
+    this.strokes.splice(strokeId, 1);
+  }
 }
 
 export default class Stroke {
@@ -31,6 +76,13 @@ export default class Stroke {
   points: Array<StrokePoint> = [];
   lengths: Array<number> = [];
   inklets: Array<StrokePoint> = [];
+
+  constructor(points?: Array<StrokePoint>) {
+    if (points) {
+      this.points = points;
+      this.rebuildLengths();
+    }
+  }
 
   addOriginalPoint(pt: StrokePoint) {
     this.originalPoints.push(pt);
@@ -60,6 +112,17 @@ export default class Stroke {
     }
   }
 
+  // Length along stroke
+  rebuildLengths() {
+    this.lengths = [];
+    for (let i = 0; i < this.points.length - 1; i++) {
+      const last = this.points[i];
+      const current = this.points[i + 1];
+      const len = Vec.len(Vec.sub(current, last));
+      this.lengths.push(len);
+    }
+  }
+
   getStrokePointAtLength(length: number): StrokePoint {
     let currentLength = 0;
     for (let i = 0; i < this.points.length - 1; i++) {
@@ -80,6 +143,7 @@ export default class Stroke {
     return totalLength;
   }
 
+  // Inklets
   rebuildInklets(step: number = 2) {
     const totalLength = this.getTotalLength();
 
@@ -123,3 +187,16 @@ export default class Stroke {
     }
   }
 }
+
+export type StrokeSlice = {
+  strokeId: number;
+  startIndex: number;
+  startPosition: Point;
+  endIndex: number;
+  endPosition: Point;
+};
+
+export type Cutpoint = {
+  index: number; // index of the linesegment
+  t: number; // lerp offset on the linesegment
+};
