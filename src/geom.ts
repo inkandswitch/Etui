@@ -7,6 +7,11 @@ export function Point(x: number, y: number): Point {
   return { x, y };
 }
 
+// reflect point a around point b
+Point.reflect = (a: Point, b: Point): Point => {
+  return Point(2 * b.x - a.x, 2 * b.y - a.y);
+};
+
 export type StrokePoint = {
   x: number;
   y: number;
@@ -53,6 +58,11 @@ Vec.sub = (a: Vec, b: Vec): Vec => Vec(a.x - b.x, a.y - b.y);
 Vec.mul = (a: Vec, b: number): Vec => Vec(a.x * b, a.y * b);
 Vec.div = (a: Vec, b: number): Vec => Vec(a.x / b, a.y / b);
 
+Vec.addS = (a: Vec, b: number): Vec => Vec(a.x + b, a.y + b);
+Vec.subS = (a: Vec, b: number): Vec => Vec(a.x - b, a.y - b);
+Vec.mulS = (a: Vec, b: number): Vec => Vec(a.x * b, a.y * b);
+Vec.divS = (a: Vec, b: number): Vec => Vec(a.x / b, a.y / b);
+
 Vec.dot = (a: Vec, b: Vec): number => a.x * b.x + a.y * b.y;
 
 Vec.project = (a: Vec, b: Vec): Vec => {
@@ -64,6 +74,12 @@ Vec.len = (a: Vec): number => Math.sqrt(a.x * a.x + a.y * a.y);
 
 Vec.lerp = (a: Vec, b: Vec, t: number): Vec =>
   Vec(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t);
+
+Vec.normalize = (a: Vec): Vec => Vec.divS(a, Vec.len(a));
+Vec.normalDiff = (a: Vec, b: Vec, scale: number = 1): Vec =>
+  Vec.mulS(Vec.normalize(Vec.sub(a, b)), scale);
+
+Vec.avg = (a: Vec, b: Vec): Vec => Vec((a.x + b.x) / 2, (a.y + b.y) / 2);
 
 // n dimensional vector
 type NVec = Array<number>;
@@ -184,7 +200,7 @@ Polygon.isPointInside = (polygon: Polygon, point: Point): boolean => {
   return inside;
 };
 
-export function catmullRomSpline(
+export function catmullRomSplinePoint(
   p0: Point,
   p1: Point,
   p2: Point,
@@ -209,4 +225,20 @@ export function catmullRomSpline(
       2 * p1.y);
 
   return { x, y };
+}
+
+export function catmullRomSpline(
+  p0: Point,
+  p1: Point,
+  p2: Point,
+  p3: Point,
+  steps: number,
+): Array<Point> {
+  let spline = [];
+  for (let i = 0; i < steps; i++) {
+    const t = i / steps;
+    let point = catmullRomSplinePoint(p0, p1, p2, p3, t);
+    spline.push(point);
+  }
+  return spline;
 }

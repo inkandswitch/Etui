@@ -1,8 +1,9 @@
-import Render, { stroke } from "./render";
-import { StrokePoint, Point, Vec } from "./geom";
+import Render, { stroke, fill } from "./render";
+import { StrokePoint, Point, Vec, catmullRomSpline } from "./geom";
 
 export class Strokes {
   strokes: Map<number, Stroke> = new Map();
+  goopyStrokes: Array<GoopyStroke> = [];
 
   step: number = 1;
 
@@ -23,6 +24,10 @@ export class Strokes {
     for (const stroke of this.strokes.values()) {
       stroke.render(r, this.debugRender, this.showPoints);
     }
+
+    for (const goopyStroke of this.goopyStrokes) {
+      goopyStroke.render(r);
+    }
   }
 
   rebuildInklets() {
@@ -31,7 +36,11 @@ export class Strokes {
     }
   }
 
-  cut(strokeId: number, cutpoints: Array<Cutpoint>): Array<Stroke> {
+  cut(
+    strokeId: number,
+    cutpoints: Array<Cutpoint>,
+    goop: boolean,
+  ): Array<Stroke> {
     // Iterates through each cutpoint and slices the stroke
     // We insert intermediate points at the cuts
     // This assumes cutpoints are sorted by index
@@ -98,7 +107,13 @@ export class Strokes {
     // Delete the original stroke
     this.removeStroke(strokeId);
 
-    console.log(this.strokes);
+    // Insert goopy strokes between the slices
+    if (goop) {
+      for (let i = 0; i < result.length - 1; i++) {
+        const goopy = new GoopyStroke(result[i], result[i + 1]);
+        this.goopyStrokes.push(goopy);
+      }
+    }
 
     return result;
   }
@@ -108,6 +123,7 @@ export default class Stroke {
   originalPoints: Array<StrokePoint> = []; // Keep original points for debugging purposes
   points: Array<StrokePoint> = [];
   lengths: Array<number> = [];
+  totalLength: number = 0;
   inklets: Array<StrokePoint> = [];
 
   constructor(points?: Array<StrokePoint>) {
@@ -129,6 +145,7 @@ export default class Stroke {
       const current = this.points[this.points.length - 1];
       const len = Vec.len(Vec.sub(current, last));
       this.lengths.push(len);
+      this.totalLength += len;
     }
   }
 
@@ -140,6 +157,11 @@ export default class Stroke {
         const last = this.points[this.points.length - 2];
         const current = this.points[this.points.length - 1];
         const len = Vec.len(Vec.sub(current, last));
+
+        // update total length
+        this.totalLength -= this.lengths[this.lengths.length - 1];
+        this.totalLength += len;
+
         this.lengths[this.lengths.length - 1] = len;
       }
     }
@@ -148,15 +170,22 @@ export default class Stroke {
   // Length along stroke
   rebuildLengths() {
     this.lengths = [];
+    this.totalLength = 0;
     for (let i = 0; i < this.points.length - 1; i++) {
       const last = this.points[i];
       const current = this.points[i + 1];
       const len = Vec.len(Vec.sub(current, last));
       this.lengths.push(len);
+      this.totalLength += len;
     }
   }
 
+  // Negative length is from the end
   getStrokePointAtLength(length: number): StrokePoint {
+    if (length < 0) {
+      length = this.totalLength + length;
+    }
+
     let currentLength = 0;
     for (let i = 0; i < this.points.length - 1; i++) {
       if (currentLength + this.lengths[i] > length) {
@@ -168,21 +197,11 @@ export default class Stroke {
     return this.points[this.points.length - 1];
   }
 
-  getTotalLength(): number {
-    let totalLength = 0;
-    for (let i = 0; i < this.lengths.length; i++) {
-      totalLength += this.lengths[i];
-    }
-    return totalLength;
-  }
-
   // Inklets
   rebuildInklets(step: number = 2) {
-    const totalLength = this.getTotalLength();
-
     this.inklets = [];
     this.inklets.push(this.points[0]);
-    for (let len = 0; len < totalLength; len += step) {
+    for (let len = 0; len < this.totalLength; len += step) {
       this.inklets.push(this.getStrokePointAtLength(len));
     }
   }
@@ -240,3 +259,47 @@ export type Cutpoint = {
   index: number; // index of the linesegment
   t: number; // lerp offset on the linesegment
 };
+
+export class GoopyStroke {
+  start: Stroke;
+  end: Stroke;
+  //points: Array<Point>;
+
+  constructor(start: Stroke, end: Stroke) {
+    this.start = start;
+    this.end = end;
+  }
+
+  render(r: Render) {
+    const spline: Array<{ x: number; y: number }> = [];
+
+    const b = this.start.points[this.start.points.length - 1];
+    const e = this.end.points[0];
+
+    let dist = Vec.len(Vec.sub(b, e)) / 4;
+
+    const da = this.start.getStrokePointAtLength(-1);
+    const a = Vec.add(b, Vec.mulS(Vec.sub(da, b), dist));
+    const cref = Vec.add(b, Vec.mulS(Vec.sub(da, b), -dist));
+    const cpnt = Vec.add(b, Vec.normalDiff(e, b, dist));
+    const c = Vec.avg(cref, cpnt);
+
+    const df = this.end.getStrokePointAtLength(1);
+    const f = Vec.add(e, Vec.mulS(Vec.sub(df, e), dist));
+    const dref = Vec.add(e, Vec.mulS(Vec.sub(df, e), -dist));
+    const dpnt = Vec.add(e, Vec.normalDiff(b, e, dist));
+    const d = Vec.avg(dref, dpnt);
+
+    spline.push(...catmullRomSpline(a, b, c, d, 50));
+    spline.push(...catmullRomSpline(b, c, d, e, 50));
+    spline.push(...catmullRomSpline(c, d, e, f, 50));
+
+    r.poly(spline, stroke("#FFA500", 0.5), false);
+    r.circle(a.x, a.y, 2, fill("#FFA500"));
+    r.circle(b.x, b.y, 2, fill("#FFA500"));
+    r.circle(c.x, c.y, 2, fill("#FFA500"));
+    r.circle(d.x, d.y, 2, fill("#FFA500"));
+    r.circle(e.x, e.y, 2, fill("#FFA500"));
+    r.circle(f.x, f.y, 2, fill("#FFA500"));
+  }
+}

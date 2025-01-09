@@ -129,15 +129,16 @@ const Panel = (capture: Capture, strokes: Strokes, select: Select) => {
               ),
             ),
             row(
-              "cut",
+              "partials",
               m(
-                "button",
+                "select",
                 {
-                  onclick: () => {
-                    select.cut();
+                  oninput: (e: any) => {
+                    select.cutMode = e.target.value;
+                    select.update();
                   },
                 },
-                "cut",
+                [m("option", "cut"), m("option", "goop")],
               ),
             ),
           ],

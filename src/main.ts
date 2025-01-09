@@ -5,9 +5,8 @@ import Render, { fill, stroke } from "./render";
 import Capture from "./capture";
 import Select from "./select";
 
-import Stroke, { Strokes } from "./stroke";
+import { Strokes } from "./stroke";
 import Camera from "./camera";
-import { catmullRomSpline } from "./geom";
 
 const camera = new Camera();
 
@@ -20,19 +19,6 @@ const tools = new Tools();
 
 const render = new Render();
 
-// draw catmul rom spline
-const spline: Array<{ x: number; y: number }> = [];
-const a = { x: 220, y: 80 };
-const b = { x: 200, y: 100 };
-const c = { x: 200, y: 200 };
-const d = { x: 220, y: 220 };
-
-for (let i = 0; i < 100; i++) {
-  const t = i / 100;
-  let point = catmullRomSpline(a, b, c, d, t);
-  spline.push(point);
-}
-
 // Tick
 function tick() {
   render.clear();
@@ -41,12 +27,6 @@ function tick() {
   capture.render(render);
   strokes.render(render);
   select.render(render);
-
-  render.poly(spline, stroke("red", 1), false);
-  render.circle(a.x, a.y, 2, fill("red"));
-  render.circle(b.x, b.y, 2, fill("red"));
-  render.circle(c.x, c.y, 2, fill("red"));
-  render.circle(d.x, d.y, 2, fill("red"));
 
   render.endOffset();
 

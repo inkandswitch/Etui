@@ -8,9 +8,10 @@ export default class Select {
   strokes: Strokes;
 
   mode: "partial" | "stroke" | "connected" = "partial";
-  move: boolean = false;
+  cutMode: "cut" | "goop";
   debugRender = true;
 
+  move: boolean = false;
   lastPosition: Point | null = null;
 
   constructor(strokes: Strokes) {
@@ -19,6 +20,7 @@ export default class Select {
 
   start() {
     if (this.move) {
+      this.cut();
     } else {
       this.captureBuffer = [];
     }
@@ -27,7 +29,9 @@ export default class Select {
   draw(x: number, y: number) {
     if (this.move) {
       if (!this.lastPosition) {
+        this.update();
         this.lastPosition = Point(x, y);
+        this.captureBuffer = [];
         return;
       }
 
@@ -178,13 +182,11 @@ export default class Select {
     }
 
     // Cut the strokes
-
     for (const [strokeId, cutpoints] of cutpointsPerStroke) {
-      this.strokes.cut(strokeId, cutpoints);
+      this.strokes.cut(strokeId, cutpoints, this.cutMode == "goop");
     }
 
     this.update();
-    //this.slices = newSlices;
   }
 
   render(r: Render) {

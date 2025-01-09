@@ -16,7 +16,7 @@ export default class Capture {
   epsilon = 0.2;
   algorithm = "furthest";
   debugRender = true;
-  showPoints = true;
+  showPoints = false;
 
   constructor(strokes: Strokes) {
     this.strokes = strokes;
