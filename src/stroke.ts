@@ -2,25 +2,31 @@ import Render, { stroke } from "./render";
 import { StrokePoint, Point, Vec } from "./geom";
 
 export class Strokes {
-  strokes: Array<Stroke> = [];
+  strokes: Map<number, Stroke> = new Map();
 
   step: number = 1;
 
   debugRender: boolean = true;
   showPoints: boolean = false;
 
+  ids: number = 0;
+
   addStroke(stroke: Stroke) {
-    this.strokes.push(stroke);
+    this.strokes.set(this.ids++, stroke);
+  }
+
+  removeStroke(strokeId: number) {
+    this.strokes.delete(strokeId);
   }
 
   render(r: Render) {
-    for (const stroke of this.strokes) {
+    for (const stroke of this.strokes.values()) {
       stroke.render(r, this.debugRender, this.showPoints);
     }
   }
 
   rebuildInklets() {
-    for (const stroke of this.strokes) {
+    for (const stroke of this.strokes.values()) {
       stroke.rebuildInklets(this.step);
     }
   }
@@ -32,7 +38,7 @@ export class Strokes {
     const EPSILON = 0.0001; // Small offset to overlapping the endpoints
 
     let result = [];
-    const points = this.strokes[strokeId].points;
+    const points = this.strokes.get(strokeId)!.points;
 
     let start_index = 0;
     let start_t = 0;
@@ -87,7 +93,7 @@ export class Strokes {
     }
 
     // Delete the original stroke
-    this.strokes.splice(strokeId, 1);
+    this.removeStroke(strokeId);
 
     return result;
   }
@@ -206,6 +212,13 @@ export default class Stroke {
           );
         }
       }
+    }
+  }
+
+  move(dx: number, dy: number) {
+    for (let i = 0; i < this.points.length; i++) {
+      this.points[i].x += dx;
+      this.points[i].y += dy;
     }
   }
 }

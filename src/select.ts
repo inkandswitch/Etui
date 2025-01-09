@@ -24,6 +24,16 @@ export default class Select {
 
   draw(x: number, y: number) {
     if (this.move) {
+      // sort the slices by stroke id
+      let strokes: Set<number> = new Set();
+      for (const slice of this.slices) {
+        strokes.add(slice.strokeId);
+      }
+
+      // move the strokes
+      for (const strokeId of strokes) {
+        this.strokes.strokes.get(strokeId)!.move(x, y);
+      }
     } else {
       const point = Point(x, y);
       this.captureBuffer.push(point);
@@ -47,8 +57,7 @@ export default class Select {
 
   findIntersections() {
     this.slices = [];
-    for (const sid in this.strokes.strokes) {
-      const stroke = this.strokes.strokes[sid];
+    for (const [sid, stroke] of this.strokes.strokes) {
       let lastIntersection = null;
       let lastIntersectionIndex = -1;
 
@@ -79,7 +88,7 @@ export default class Select {
               lastIntersectionIndex = i;
             } else {
               this.slices.push({
-                strokeId: parseInt(sid),
+                strokeId: sid,
                 startIndex: lastIntersectionIndex,
                 startPosition: lastIntersection,
                 endIndex: i,
@@ -95,7 +104,7 @@ export default class Select {
       // Check if the last intersection was not closed, in which case we add the end of the stroke as a slice
       if (lastIntersection) {
         this.slices.push({
-          strokeId: parseInt(sid),
+          strokeId: sid,
           startIndex: lastIntersectionIndex,
           startPosition: lastIntersection,
           endIndex: stroke.points.length - 1,
@@ -116,11 +125,11 @@ export default class Select {
       this.slices.push({
         strokeId: sid,
         startIndex: 0,
-        startPosition: this.strokes.strokes[sid].points[0],
-        endIndex: this.strokes.strokes[sid].points.length - 1,
+        startPosition: this.strokes.strokes.get(sid)!.points[0],
+        endIndex: this.strokes.strokes.get(sid)!.points.length - 1,
         endPosition:
-          this.strokes.strokes[sid].points[
-            this.strokes.strokes[sid].points.length - 1
+          this.strokes.strokes.get(sid)!.points[
+            this.strokes.strokes.get(sid)!.points.length - 1
           ],
       });
     }
@@ -131,7 +140,7 @@ export default class Select {
     const cutpointsPerStroke: Map<number, Array<Cutpoint>> = new Map();
     for (const slice of this.slices) {
       let list = cutpointsPerStroke.get(slice.strokeId);
-      const stroke = this.strokes.strokes[slice.strokeId];
+      const stroke = this.strokes.strokes.get(slice.strokeId)!;
 
       if (!list) {
         list = [];
@@ -173,10 +182,9 @@ export default class Select {
       r.circle(slice.endPosition.x, slice.endPosition.y, 2, fill("green"));
 
       // Draw the slice
-      const stroke_points = this.strokes.strokes[slice.strokeId].points.slice(
-        slice.startIndex + 1,
-        slice.endIndex + 1,
-      );
+      const stroke_points = this.strokes.strokes
+        .get(slice.strokeId)!
+        .points.slice(slice.startIndex + 1, slice.endIndex + 1);
       r.poly(
         [slice.startPosition, ...stroke_points, slice.endPosition],
         stroke("#00FF0044", 10),

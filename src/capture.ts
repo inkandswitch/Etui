@@ -24,7 +24,7 @@ export default class Capture {
 
   recompute() {
     // Get old values for all strokes and recompute them
-    for (const stroke of this.strokes.strokes) {
+    for (const stroke of this.strokes.strokes.values()) {
       const originalPoints = stroke.originalPoints;
       stroke.points = [];
       stroke.originalPoints = [];
@@ -107,9 +107,7 @@ export default class Capture {
 
   render(r: Render) {
     if (!this.debugRender) return;
-    for (const s of this.strokes.strokes.concat(
-      this.stroke ? [this.stroke] : [],
-    )) {
+    for (const s of this.strokes.strokes.values()) {
       if (this.showPoints) {
         // Draw original points
         for (const point of s.originalPoints) {
