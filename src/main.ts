@@ -113,4 +113,9 @@ window.addEventListener("keydown", (e) => {
   if (e.key == "z") {
     camera.reset();
   }
+
+  // Escape key
+  if (e.key == "Escape") {
+    select.reset();
+  }
 });

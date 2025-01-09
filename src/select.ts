@@ -8,10 +8,11 @@ export default class Select {
   strokes: Strokes;
 
   mode: "partial" | "stroke" | "connected" = "partial";
-  cutMode: "cut" | "goop";
+  cutMode: "cut" | "goop" = "cut";
   debugRender = true;
 
   move: boolean = false;
+  didMove: boolean = false;
   lastPosition: Point | null = null;
 
   constructor(strokes: Strokes) {
@@ -20,18 +21,19 @@ export default class Select {
 
   start() {
     if (this.move) {
-      this.cut();
-    } else {
-      this.captureBuffer = [];
+      if (!this.didMove) {
+        this.didMove = true;
+        this.cut();
+        this.update();
+        this.captureBuffer = [];
+      }
     }
   }
 
   draw(x: number, y: number) {
     if (this.move) {
       if (!this.lastPosition) {
-        this.update();
         this.lastPosition = Point(x, y);
-        this.captureBuffer = [];
         return;
       }
 
@@ -71,6 +73,13 @@ export default class Select {
       this.findIntersections();
       this.selectWholeStrokes();
     }
+  }
+
+  reset() {
+    this.slices = [];
+    this.captureBuffer = [];
+    this.move = false;
+    this.didMove = false;
   }
 
   findIntersections() {
