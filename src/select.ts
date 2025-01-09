@@ -11,6 +11,8 @@ export default class Select {
   move: boolean = false;
   debugRender = true;
 
+  lastPosition: Point | null = null;
+
   constructor(strokes: Strokes) {
     this.strokes = strokes;
   }
@@ -24,6 +26,14 @@ export default class Select {
 
   draw(x: number, y: number) {
     if (this.move) {
+      if (!this.lastPosition) {
+        this.lastPosition = Point(x, y);
+        return;
+      }
+
+      let delta = Vec.sub(Point(x, y), this.lastPosition);
+      this.lastPosition = Point(x, y);
+
       // sort the slices by stroke id
       let strokes: Set<number> = new Set();
       for (const slice of this.slices) {
@@ -32,7 +42,7 @@ export default class Select {
 
       // move the strokes
       for (const strokeId of strokes) {
-        this.strokes.strokes.get(strokeId)!.move(x, y);
+        this.strokes.strokes.get(strokeId)!.move(delta.x, delta.y);
       }
     } else {
       const point = Point(x, y);
@@ -41,8 +51,12 @@ export default class Select {
   }
 
   end() {
-    this.update();
-    this.move = true;
+    if (this.move) {
+      this.lastPosition = null;
+    } else {
+      this.update();
+      this.move = true;
+    }
   }
 
   update() {

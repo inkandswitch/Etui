@@ -53,7 +53,7 @@ export class Strokes {
             StrokePoint.lerp(
               points[start_index - 1],
               points[start_index],
-              start_t - EPSILON,
+              start_t + EPSILON,
             ),
           );
         }
@@ -63,15 +63,18 @@ export class Strokes {
             StrokePoint.lerp(
               points[index],
               points[index + 1],
-              cutpoint.t + EPSILON,
+              cutpoint.t - EPSILON,
             ),
           );
           start_t = cutpoint.t;
         }
 
-        const stroke = new Stroke(slice);
-        result.push(stroke);
-        this.addStroke(stroke);
+        if (slice.length > 1) {
+          const stroke = new Stroke(slice);
+          result.push(stroke);
+          this.addStroke(stroke);
+        }
+
         start_index = index + 1;
       }
     }
@@ -83,7 +86,7 @@ export class Strokes {
           StrokePoint.lerp(
             points[start_index - 1],
             points[start_index],
-            start_t - EPSILON,
+            start_t + EPSILON,
           ),
         );
       }
@@ -94,6 +97,8 @@ export class Strokes {
 
     // Delete the original stroke
     this.removeStroke(strokeId);
+
+    console.log(this.strokes);
 
     return result;
   }
