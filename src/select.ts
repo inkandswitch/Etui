@@ -155,9 +155,13 @@ export default class Select {
     }
 
     // Cut the strokes
+
     for (const [strokeId, cutpoints] of cutpointsPerStroke) {
       this.strokes.cut(strokeId, cutpoints);
     }
+
+    this.update();
+    //this.slices = newSlices;
   }
 
   render(r: Render) {

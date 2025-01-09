@@ -25,49 +25,71 @@ export class Strokes {
     }
   }
 
-  cut(strokeId: number, cutpoints: Array<Cutpoint>) {
+  cut(strokeId: number, cutpoints: Array<Cutpoint>): Array<Stroke> {
     // Iterates through each cutpoint and slices the stroke
     // We insert intermediate points at the cuts
     // This assumes cutpoints are sorted by index
+    const EPSILON = 0.0001; // Small offset to overlapping the endpoints
 
+    let result = [];
     const points = this.strokes[strokeId].points;
 
-    let start = 0;
-    let startPoint = null;
+    let start_index = 0;
+    let start_t = 0;
 
     for (const cutpoint of cutpoints) {
       const index = cutpoint.index;
       if (index <= points.length) {
-        const slice = points.slice(start, index + 1);
+        const slice = points.slice(start_index, index + 1);
 
-        if (startPoint) {
-          slice.unshift({ ...startPoint }); // Add a copy of the startpoint
+        if (start_t > 0) {
+          slice.unshift(
+            StrokePoint.lerp(
+              points[start_index - 1],
+              points[start_index],
+              start_t - EPSILON,
+            ),
+          );
         }
 
         if (cutpoint.t > 0) {
-          startPoint = StrokePoint.lerp(
-            points[index],
-            points[index + 1],
-            cutpoint.t,
+          slice.push(
+            StrokePoint.lerp(
+              points[index],
+              points[index + 1],
+              cutpoint.t + EPSILON,
+            ),
           );
-          slice.push(startPoint);
+          start_t = cutpoint.t;
         }
 
-        this.addStroke(new Stroke(slice));
-        start = index + 1;
+        const stroke = new Stroke(slice);
+        result.push(stroke);
+        this.addStroke(stroke);
+        start_index = index + 1;
       }
     }
     // Add the tail of the stroke
-    if (start < points.length) {
-      const slice = points.slice(start);
-      if (startPoint) {
-        slice.unshift(startPoint);
+    if (start_index < points.length) {
+      const slice = points.slice(start_index);
+      if (start_t > 0) {
+        slice.unshift(
+          StrokePoint.lerp(
+            points[start_index - 1],
+            points[start_index],
+            start_t - EPSILON,
+          ),
+        );
       }
-      this.addStroke(new Stroke(slice));
+      const stroke = new Stroke(slice);
+      result.push(stroke);
+      this.addStroke(stroke);
     }
 
     // Delete the original stroke
     this.strokes.splice(strokeId, 1);
+
+    return result;
   }
 }
 
