@@ -8,7 +8,7 @@ export default class Select {
   strokes: Strokes;
 
   mode: "partial" | "stroke" | "connected" = "partial";
-  cutMode: "cut" | "goop" = "cut";
+  cutMode: "cut" | "noodlify" = "cut";
   debugRender = true;
 
   move: boolean = false;
@@ -192,7 +192,7 @@ export default class Select {
 
     // Cut the strokes
     for (const [strokeId, cutpoints] of cutpointsPerStroke) {
-      this.strokes.cut(strokeId, cutpoints, this.cutMode == "goop");
+      this.strokes.cut(strokeId, cutpoints, this.cutMode == "noodlify");
     }
 
     this.update();

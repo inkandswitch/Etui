@@ -138,7 +138,7 @@ const Panel = (capture: Capture, strokes: Strokes, select: Select) => {
                     select.update();
                   },
                 },
-                [m("option", "cut"), m("option", "goop")],
+                [m("option", "cut"), m("option", "noodlify")],
               ),
             ),
           ],
