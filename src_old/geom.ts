@@ -235,7 +235,7 @@ export function catmullRomSpline(
   steps: number,
 ): Array<Point> {
   let spline = [];
-  for (let i = 0; i < steps; i++) {
+  for (let i = 0; i <= steps; i++) {
     const t = i / steps;
     let point = catmullRomSplinePoint(p0, p1, p2, p3, t);
     spline.push(point);

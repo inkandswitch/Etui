@@ -1,14 +1,22 @@
-import { Point, Vec } from "./geom";
+import { Point } from "./geom/point";
+import { Vec } from "./geom/vec";
 
 export default class Camera {
   position = { x: 0, y: 0 };
   zoom = 1;
 
-  updateZoom(delta: number) {
-    this.zoom -= delta * 0.01;
+  
+  updateZoom(delta: number, zoomCenter: Point) {
+    const oldZoom = this.zoom;
+    this.zoom = Math.max(0.1, this.zoom - delta * 0.01); // Prevent negative zoom
+    
+    // Adjust position to keep zoomCenter in the same screen position
+    const zoomFactor = this.zoom / oldZoom;
+    this.position.x += (zoomCenter.x / this.zoom) * (1 - zoomFactor);
+    this.position.y += (zoomCenter.y / this.zoom) * (1 - zoomFactor);
   }
 
-  updatePosition(delta: Point) {
+  updatePosition(delta: Vec) {
     this.position = Vec.add(this.position, delta);
   }
 

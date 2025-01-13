@@ -22,7 +22,7 @@ export default class Render {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
 
-  beginOffset(camera: Camera) {
+  offset(camera: Camera) {
     this.ctx.save();
     this.ctx.scale(camera.zoom, camera.zoom);
     this.ctx.translate(camera.position.x, camera.position.y);
