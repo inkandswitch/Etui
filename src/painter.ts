@@ -18,12 +18,15 @@ export default class Painter {
       for (const slice of slices) {
         const points = this.slicer.getSlicePoints(slice);
         const inklets: Array<Inklet> = [];
+        const color = slice.props.color.getValue()!;
+        const weight = slice.props.weight.getValue()!;
+
         for (const point of points) {
           inklets.push({
             x: point.x,
             y: point.y,
-            color: slice.props[0].color!,
-            weight: slice.props[0].weight!,
+            color,
+            weight,
           });
         }
         this.inklets.set(slice.id, inklets);

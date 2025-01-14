@@ -1,4 +1,5 @@
 import { StrokePoint } from "./geom/strokepoint";
+import PropertyStack from "./property-stack";
 import Render, { fill } from "./render";
 import StrokeManager from "./stroke-manager";
 
@@ -24,17 +25,20 @@ export default class Slicer {
         id: ids++,
         start: 0,
         end: half,
-        props: [{ color: stroke.color, weight: stroke.weight }],
+        props: {
+          color: new PropertyStack([stroke.color]),
+          weight: new PropertyStack([stroke.weight]),
+        },
       });
       slices.push({
         stroke_id,
         id: ids++,
         start: half,
         end: stroke.length,
-        props: [
-          { color: stroke.color, weight: stroke.weight },
-          { color: "red" },
-        ],
+        props: {
+          color: new PropertyStack([stroke.color, "red"]),
+          weight: new PropertyStack([stroke.weight, 4]),
+        },
       });
       this.slices.set(stroke_id, slices);
     }
@@ -66,12 +70,12 @@ export type StrokeSlice = {
   stroke_id: number;
   start: number;
   end: number;
-  props: Array<Props>;
+  props: Props;
 };
 
 export type Props = {
-  color?: string;
-  weight?: number;
+  color: PropertyStack<string>;
+  weight: PropertyStack<number>;
 };
 
 function getRandomColor(seed: number): string {
