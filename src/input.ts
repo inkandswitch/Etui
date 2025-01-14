@@ -32,8 +32,11 @@ export default class Input {
     this.toolmanager = toolmanager;
 
     window.addEventListener("pointerdown", (e) => {
-      this.down = true;
-      this.onMouseDown(toInputEvent(e, camera));
+      //@ts-ignore
+      if (e.target.nodeName === "CANVAS") {
+        this.down = true;
+        this.onMouseDown(toInputEvent(e, camera));
+      }
     });
 
     window.addEventListener("pointermove", (e) => {
@@ -45,8 +48,10 @@ export default class Input {
     });
 
     window.addEventListener("pointerup", (e) => {
-      this.down = false;
-      this.onMouseUp(toInputEvent(e, camera));
+      if (this.down) {
+        this.down = false;
+        this.onMouseUp(toInputEvent(e, camera));
+      }
     });
 
     // pan & pinch to zoom

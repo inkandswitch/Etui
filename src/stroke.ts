@@ -6,14 +6,16 @@ import { StrokeSlice } from "./slicer";
 
 // Basic Stroke Data
 export default class Stroke {
-  points: Array<StrokePoint> = [];
-  length: number = 0;
-  color: string = "black";
-  weight: number = 1;
+  points: Array<StrokePoint>;
+  length: number;
+  color: string;
+  weight: number;
 
-  constructor() {
+  constructor(color: string = "red", weight: number = 1) {
     this.points = [];
     this.length = 0;
+    this.color = color;
+    this.weight = weight;
   }
 
   addPoint(data: MouseData) {

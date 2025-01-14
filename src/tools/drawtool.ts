@@ -6,13 +6,17 @@ import { Tool } from "../tool-manager";
 export class DrawTool implements Tool {
   strokemanager: StrokeManager;
   stroke: Stroke | null = null;
+  color: string;
+  weight: number;
 
   constructor(strokemanager: StrokeManager) {
     this.strokemanager = strokemanager;
+    this.color = "black";
+    this.weight = 1;
   }
 
   onMouseDown(p: MouseData): void {
-    this.stroke = new Stroke();
+    this.stroke = new Stroke(this.color, this.weight);
     this.stroke.addPoint(p);
     this.strokemanager.addStroke(this.stroke);
   }

@@ -20,6 +20,7 @@ export default class Slicer {
     for (const [stroke_id, stroke] of this.strokemanager.strokes) {
       const half = stroke.length / 2;
       const slices: Array<StrokeSlice> = [];
+
       slices.push({
         stroke_id,
         id: ids++,
@@ -30,16 +31,18 @@ export default class Slicer {
           weight: new PropertyStack([stroke.weight]),
         },
       });
+
       slices.push({
         stroke_id,
         id: ids++,
         start: half,
         end: stroke.length,
         props: {
-          color: new PropertyStack([stroke.color, "red"]),
+          color: new PropertyStack([stroke.color, (c: string) => `dark${c}`]),
           weight: new PropertyStack([stroke.weight, 4]),
         },
       });
+
       this.slices.set(stroke_id, slices);
     }
   }

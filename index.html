@@ -18,15 +18,43 @@
                 padding: 0px;
             }
 
-            .tool_panel {
+            .property_panel {
                 position: absolute;
                 top: 10px;
                 left: 10px;
                 border-radius: 4px;
                 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
                 border: 1px solid rgba(0, 0, 0, 0.1);
-                padding: 8px;
+                padding: 4px;
                 background-color: white;
+            }
+
+            .property {
+                position: relative;
+            }
+
+            .property_menu {
+                position: absolute;
+                top: -5px;
+                left: -5px;
+                display: flex;
+                border-radius: 4px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                border: 1px solid rgba(0, 0, 0, 0.1);
+                padding: 4px;
+                background-color: white;
+                z-index: 999;
+                display: none;
+            }
+
+            .property_menu.--open {
+                display: flex;
+            }
+
+            .swatch {
+                width: 32px;
+                height: 32px;
+                border-radius: 2px;
             }
 
             .tool_header {
@@ -76,6 +104,5 @@
     </head>
     <body>
         <script type="module" src="/src/main.ts"></script>
-        
     </body>
 </html>

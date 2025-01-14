@@ -7,7 +7,7 @@ type StackElement<T> = T | Modifier<T>;
 export default class PropertyStack<T> {
   stack: Array<StackElement<T>> = [];
 
-  constructor(initialValues: Array<T>) {
+  constructor(initialValues: Array<StackElement<T>>) {
     this.stack = initialValues;
   }
 

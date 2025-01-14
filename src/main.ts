@@ -4,26 +4,32 @@ import Input from "./input";
 
 import Camera from "./camera";
 
-// Rendering pipeline
 import StrokeManager from "./stroke-manager";
 import Slicer from "./slicer";
 import Painter from "./painter";
 
-// Tools
+import PropertyPanel from "./property-panel";
 import ToolManager from "./tool-manager";
 import { DrawTool } from "./tools/drawtool";
 
 const render = new Render();
 const camera = new Camera();
-const toolmanager = new ToolManager();
 
+// Create ink pipeline
 const strokemanager = new StrokeManager();
 const slicer = new Slicer(strokemanager);
 const painter = new Painter(slicer);
 
-const input = new Input(camera, toolmanager);
+// Register tools
+const toolmanager = new ToolManager();
+const drawtool = new DrawTool(strokemanager);
+toolmanager.register("draw", drawtool);
 
-toolmanager.register("draw", new DrawTool(strokemanager));
+// Create panels
+new PropertyPanel(drawtool);
+
+// Handle input
+const input = new Input(camera, toolmanager);
 
 tick((dt: number) => {
   render.clear();
