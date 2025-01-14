@@ -6,16 +6,18 @@ export type StrokePoint = {
   pressure: number;
   tilt_x: number;
   tilt_y: number;
+  distance: number;
 };
 
-export default function StrokePoint(
+export function StrokePoint(
   x: number,
   y: number,
   pressure: number,
   tilt_x: number,
   tilt_y: number,
+  distance: number,
 ): StrokePoint {
-  return { x, y, pressure, tilt_x, tilt_y };
+  return { x, y, pressure, tilt_x, tilt_y, distance };
 }
 
 // Convert to weighted vector
@@ -29,5 +31,6 @@ StrokePoint.lerp = (a: StrokePoint, b: StrokePoint, t: number): StrokePoint => {
     a.pressure + (b.pressure - a.pressure) * t,
     a.tilt_x + (b.tilt_x - a.tilt_x) * t,
     a.tilt_y + (b.tilt_y - a.tilt_y) * t,
+    a.distance + (b.distance - a.distance) * t,
   );
 };

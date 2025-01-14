@@ -14,6 +14,10 @@ export default class StrokeManager {
     this.ids++;
   }
 
+  getStroke(id: number): Stroke {
+    return this.strokes.get(id)!;
+  }
+
   render(r: Render) {
     this.strokes.forEach((s) => {
       s.render(r);

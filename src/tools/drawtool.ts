@@ -13,25 +13,13 @@ export class DrawTool implements Tool {
 
   onMouseDown(p: MouseData): void {
     this.stroke = new Stroke();
-    this.stroke.points.push({
-      x: p.world.x,
-      y: p.world.y,
-      pressure: p.pressure,
-      tilt_x: p.tiltX,
-      tilt_y: p.tiltY,
-    });
+    this.stroke.addPoint(p);
     this.strokemanager.addStroke(this.stroke);
   }
 
   onMouseDrag(p: MouseData): void {
     if (this.stroke) {
-      this.stroke.points.push({
-        x: p.world.x,
-        y: p.world.y,
-        pressure: p.pressure,
-        tilt_x: p.tiltX,
-        tilt_y: p.tiltY,
-      });
+      this.stroke.addPoint(p);
     }
   }
 
@@ -41,5 +29,6 @@ export class DrawTool implements Tool {
     if (this.stroke) {
       this.stroke = null;
     }
+    console.log(this.strokemanager);
   }
 }
