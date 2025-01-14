@@ -18,8 +18,24 @@ const Panel = (drawtool: DrawTool) => {
         m(Property, {
           value: drawtool.color,
           onchange: (value: string) => (drawtool.color = value),
+          renderValue: (value: string) =>
+            m(".swatch", { style: `background: ${value};` }),
+          options: [
+            "#000000",
+            "#FF6F61",
+            "#5FD9C9",
+            "#5AB1F0",
+            "#A785E2",
+            "#FFA987",
+            "#FFD966",
+          ],
         }),
-        m(".property", ""),
+        m(Property, {
+          value: drawtool.weight,
+          onchange: (value: number) => (drawtool.weight = value),
+          renderValue: (value: number) => m(Circle, { diameter: value * 2 }),
+          options: [1, 3, 5, 7, 9, 11, 13],
+        }),
       ]);
     },
   };
@@ -31,6 +47,9 @@ const Property = {
     const open = vnode.state.open;
     const color = vnode.attrs.value;
     const onchange = vnode.attrs.onchange;
+    const options = vnode.attrs.options;
+    const renderValue = vnode.attrs.renderValue;
+
     return m(
       ".property",
       {
@@ -39,44 +58,33 @@ const Property = {
         },
       },
       [
-        m(".swatch", { style: `background: ${color};` }),
+        renderValue(color),
         m(
           ".property_menu",
           {
             class: open ? "--open" : "",
           },
-          [
-            m(".swatch", {
-              style: "background: #000000;",
-              onclick: () => onchange("#000000"),
-            }),
-            m(".swatch", {
-              style: "background: #FF6F61;",
-              onclick: () => onchange("#FF6F61"),
-            }),
-            m(".swatch", {
-              style: "background: #5FD9C9;",
-              onclick: () => onchange("#5FD9C9"),
-            }),
-            m(".swatch", {
-              style: "background: #5AB1F0;",
-              onclick: () => onchange("#5AB1F0"),
-            }),
-            m(".swatch", {
-              style: "background: #A785E2;",
-              onclick: () => onchange("#A785E2"),
-            }),
-            m(".swatch", {
-              style: "background: #FFA987;",
-              onclick: () => onchange("#FFA987"),
-            }),
-            m(".swatch", {
-              style: "background: #FFD966;",
-              onclick: () => onchange("#FFD966"),
-            }),
-          ],
+          options.map((c: any) =>
+            m(
+              ".option",
+              {
+                onclick: () => onchange(c),
+              },
+              renderValue(c),
+            ),
+          ),
         ),
       ],
+    );
+  },
+};
+
+const Circle = {
+  view(vnode: any) {
+    const diameter = vnode.attrs.diameter;
+    return m(
+      ".circle_wrapper",
+      m(".circle", { style: `width: ${diameter}px; height: ${diameter}px;` }),
     );
   },
 };
