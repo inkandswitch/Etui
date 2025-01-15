@@ -1,5 +1,5 @@
 import m from "mithril";
-import { DrawTool } from "./tools/drawtool";
+import { DrawTool } from "../tools/drawtool";
 
 export default class PropertyPanel {
   panel: HTMLDivElement;
@@ -16,6 +16,7 @@ const Panel = (drawtool: DrawTool) => {
     view() {
       return m(".property_panel", [
         m(Property, {
+          name: "Color",
           value: drawtool.color,
           onchange: (value: string) => (drawtool.color = value),
           renderValue: (value: string) =>
@@ -31,6 +32,7 @@ const Panel = (drawtool: DrawTool) => {
           ],
         }),
         m(Property, {
+          name: "Weight",
           value: drawtool.weight,
           onchange: (value: number) => (drawtool.weight = value),
           renderValue: (value: number) => m(Circle, { diameter: value * 2 }),
@@ -53,6 +55,7 @@ const Property = {
     return m(
       ".property",
       {
+        title: vnode.attrs.name,
         onclick: () => {
           vnode.state.open = !open;
         },

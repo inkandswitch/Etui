@@ -20,7 +20,7 @@
 
             .property_panel {
                 position: absolute;
-                top: 10px;
+                top: 180px;
                 left: 10px;
                 border-radius: 4px;
                 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -69,7 +69,31 @@
                 background-color: black;
             }
 
-            .tool_header {
+            .tool_panel {
+                position: absolute;
+                top: 10px;
+                left: 10px;
+                border-radius: 4px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                border: 1px solid rgba(0, 0, 0, 0.1);
+                background-color: white;
+            }
+
+            .tool {
+                width: 32px;
+                height: 32px;
+                padding: 4px;
+                font-size: 24px;
+                text-align: center;
+            }
+
+            .tool.--active {
+                background-color: #f0f0f0;
+            }
+
+            /* Tool panel */
+
+            /* .tool_header {
                 font-weight: bold;
                 margin-top: 8px;
             }
@@ -94,14 +118,14 @@
                 background-color: white;
 
                 display: grid;
-                gap: 1rem; /* Space between rows */
-                margin: 0 auto; /* Center panel */
+                gap: 1rem;
+                margin: 0 auto;
             }
 
             .settings_row {
                 display: grid;
-                grid-template-columns: 1fr 2fr; /* Labels take 1 fraction, inputs take 2 fractions */
-                align-items: center; /* Align label and input vertically */
+                grid-template-columns: 1fr 2fr;
+                align-items: center;
             }
 
             .settings_header {
@@ -111,10 +135,11 @@
 
             input[type="checkbox"] {
                 justify-self: start;
-            }
+            } */
         </style>
     </head>
     <body>
         <script type="module" src="/src/main.ts"></script>
+        <div id="panels"></div>
     </body>
 </html>

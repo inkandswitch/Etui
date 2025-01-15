@@ -8,7 +8,9 @@ import StrokeManager from "./stroke-manager";
 import Slicer from "./slicer";
 import Painter from "./painter";
 
-import PropertyPanel from "./property-panel";
+import PropertyPanel from "./panels/property-panel";
+import ToolPanel from "./panels/tool-panel";
+
 import ToolManager from "./tool-manager";
 import { DrawTool } from "./tools/drawtool";
 
@@ -26,10 +28,11 @@ const drawtool = new DrawTool(strokemanager);
 toolmanager.register("draw", drawtool);
 
 // Create panels
+new ToolPanel(toolmanager);
 new PropertyPanel(drawtool);
 
 // Handle input
-const input = new Input(camera, toolmanager);
+new Input(camera, toolmanager);
 
 tick((dt: number) => {
   render.clear();
