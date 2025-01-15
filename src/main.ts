@@ -16,6 +16,8 @@ import DrawTool from "./tools/drawtool";
 import SelectTool from "./tools/selecttool";
 import SelectionManager from "./selection-manager";
 
+import Stroke from "./stroke";
+
 const render = new Render();
 const camera = new Camera();
 
@@ -40,6 +42,34 @@ new PropertyPanel(drawtool);
 // Handle input
 new Input(camera, toolmanager);
 
+// Example
+const s = new Stroke("red", 1);
+s.addPoint({
+  pressure: 1,
+  tiltX: 0,
+  tiltY: 0,
+  world: { x: 0, y: 0 },
+  delta: { x: 0, y: 0 },
+});
+
+s.addPoint({
+  pressure: 1,
+  tiltX: 0,
+  tiltY: 0,
+  world: { x: 100, y: 100 },
+  delta: { x: 100, y: 100 },
+});
+
+s.addPoint({
+  pressure: 1,
+  tiltX: 0,
+  tiltY: 0,
+  world: { x: 200, y: 100 },
+  delta: { x: 100, y: 0 },
+});
+
+strokemanager.addStroke(s);
+
 tick((dt: number) => {
   render.clear();
   render.beginOffset(camera);
@@ -47,6 +77,8 @@ tick((dt: number) => {
   slicer.update();
   painter.update();
   painter.render(render);
+
+  strokemanager.render(render);
 
   selectionmanager.render(render);
 

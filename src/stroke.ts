@@ -1,6 +1,7 @@
 import { StrokePoint } from "./geom/strokepoint";
 import { Vec } from "./geom/vec";
-import Render, { stroke } from "./render";
+import { Line } from "./geom/line";
+import Render, { stroke, fill } from "./render";
 import { MouseData } from "./input";
 import { StrokeSlice } from "./slicer";
 
@@ -37,6 +38,25 @@ export default class Stroke {
     );
   }
 
+  setPoints(points: Array<StrokePoint>) {
+    this.points = [];
+    this.length = 0;
+
+    for (let i = 0; i < points.length; i++) {
+      let newPoint = StrokePoint.clone(points[i]);
+      if (i == 0) {
+        newPoint.distance = 0;
+      } else {
+        // Recalculate the distance between points
+        newPoint.distance = Vec.dist(points[i - 1], newPoint);
+        this.length += newPoint.distance;
+      }
+      this.points.push(newPoint);
+    }
+
+    console.log(this);
+  }
+
   getPointAtLength(length: number): StrokePoint {
     if (length < 0 || this.points.length === 0) {
       return this.points[0];
@@ -54,6 +74,24 @@ export default class Stroke {
 
     // If length is greater than the total length, return the last point
     return this.points[this.points.length - 1];
+  }
+
+  getIndextAtLength(length: number): number {
+    if (length < 0 || this.points.length === 0) {
+      return 0;
+    }
+
+    let currentLength = 0;
+    for (let i = 0; i < this.points.length - 1; i++) {
+      const len = this.points[i + 1].distance;
+      if (currentLength + len >= length) {
+        return i;
+      }
+      currentLength += len;
+    }
+
+    // If length is greater than the total length, return the last point
+    return this.points.length - 1;
   }
 
   getPointsForSlice(slice: StrokeSlice, step: number) {
@@ -102,7 +140,34 @@ export default class Stroke {
     return points;
   }
 
+  cut(offset: number): [Stroke, Stroke] {
+    const cutIndex = this.getIndextAtLength(offset);
+    const cutPoint = this.getPointAtLength(offset);
+
+    const leftSide: Array<StrokePoint> = this.points.slice(0, cutIndex + 1);
+    leftSide.push(cutPoint);
+    const leftStroke = new Stroke(this.color, this.weight);
+    leftStroke.setPoints(leftSide);
+
+    const rightSide: Array<StrokePoint> = this.points.slice(cutIndex + 1);
+    rightSide.unshift(StrokePoint.clone(cutPoint));
+    const rightStroke = new Stroke(this.color, this.weight);
+    rightStroke.setPoints(rightSide);
+
+    return [leftStroke, rightStroke];
+  }
+
   render(r: Render) {
     r.poly(this.points, stroke("red", 0.5), false);
+
+    // Render the points
+    for (const pt of this.points) {
+      r.circle(pt.x, pt.y, 2, fill("red"));
+    }
   }
 }
+
+export type CutPoint = {
+  stroke_id: number;
+  offset: number;
+};

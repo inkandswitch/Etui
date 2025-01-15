@@ -1,5 +1,5 @@
 import Render from "./render";
-import Stroke from "./stroke";
+import Stroke, { CutPoint } from "./stroke";
 
 export default class StrokeManager {
   strokes: Map<number, Stroke> = new Map();
@@ -9,9 +9,14 @@ export default class StrokeManager {
     this.strokes = new Map();
   }
 
-  addStroke(s: Stroke) {
-    this.strokes.set(this.ids, s);
-    this.ids++;
+  addStroke(s: Stroke): number {
+    let id = this.ids++;
+    this.strokes.set(id, s);
+    return id;
+  }
+
+  removeStroke(id: number) {
+    this.strokes.delete(id);
   }
 
   getStroke(id: number): Stroke {

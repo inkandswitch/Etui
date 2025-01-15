@@ -34,3 +34,14 @@ StrokePoint.lerp = (a: StrokePoint, b: StrokePoint, t: number): StrokePoint => {
     a.distance + (b.distance - a.distance) * t,
   );
 };
+
+StrokePoint.clone = (pt: StrokePoint): StrokePoint => {
+  return StrokePoint(
+    pt.x,
+    pt.y,
+    pt.pressure,
+    pt.tilt_x,
+    pt.tilt_y,
+    pt.distance,
+  );
+};

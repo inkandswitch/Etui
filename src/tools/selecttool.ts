@@ -6,22 +6,38 @@ import SelectionManager from "../selection-manager";
 
 export default class SelectTool implements Tool {
   selectionmanager: SelectionManager;
+  selected: boolean = false;
+  moved: boolean = false;
 
   constructor(selectionmanager: SelectionManager) {
     this.selectionmanager = selectionmanager;
   }
 
   onMouseDown(p: MouseData): void {
-    this.selectionmanager.beginSelection(p.world);
+    if (!this.selected) {
+      this.selectionmanager.beginSelection(p.world);
+    } else {
+      if (!this.moved) {
+        this.selectionmanager.cutSelection();
+        this.moved = true;
+      }
+    }
   }
 
   onMouseDrag(p: MouseData): void {
-    this.selectionmanager.extendSelection(p.world);
+    if (!this.selected) {
+      this.selectionmanager.extendSelection(p.world);
+    } else {
+      this.selectionmanager.moveSelection(p.delta);
+    }
   }
 
   onMouseMove(p: MouseData): void {}
 
   onMouseUp(p: MouseData): void {
-    this.selectionmanager.endSelection();
+    if (!this.selected) {
+      this.selectionmanager.endSelection();
+      this.selected = true;
+    }
   }
 }
