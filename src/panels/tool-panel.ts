@@ -27,12 +27,17 @@ const Panel = (toolmanager: ToolManager) => {
         }),
         m(Tool, {
           name: "beam",
-          icon: "🦴",
+          icon: "📏",
           toolmanager,
         }),
         m(Tool, {
           name: "erase",
           icon: "🧽",
+          toolmanager,
+        }),
+        m(Tool, {
+          name: "query",
+          icon: "🧪",
           toolmanager,
         }),
       ]);

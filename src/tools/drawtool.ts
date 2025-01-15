@@ -3,7 +3,7 @@ import Stroke from "../stroke";
 import StrokeManager from "../stroke-manager";
 import { Tool } from "../tool-manager";
 
-export class DrawTool implements Tool {
+export default class DrawTool implements Tool {
   strokemanager: StrokeManager;
   stroke: Stroke | null = null;
   color: string;
