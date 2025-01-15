@@ -11,12 +11,14 @@ export default class Stroke {
   length: number;
   color: string;
   weight: number;
+  brush: string;
 
-  constructor(color: string = "red", weight: number = 1) {
+  constructor(color: string = "red", weight: number = 1, brush: string) {
     this.points = [];
     this.length = 0;
     this.color = color;
     this.weight = weight;
+    this.brush = brush;
   }
 
   addPoint(data: MouseData) {
@@ -146,12 +148,12 @@ export default class Stroke {
 
     const leftSide: Array<StrokePoint> = this.points.slice(0, cutIndex + 1);
     leftSide.push(cutPoint);
-    const leftStroke = new Stroke(this.color, this.weight);
+    const leftStroke = new Stroke(this.color, this.weight, this.brush);
     leftStroke.setPoints(leftSide);
 
     const rightSide: Array<StrokePoint> = this.points.slice(cutIndex + 1);
     rightSide.unshift(StrokePoint.clone(cutPoint));
-    const rightStroke = new Stroke(this.color, this.weight);
+    const rightStroke = new Stroke(this.color, this.weight, this.brush);
     rightStroke.setPoints(rightSide);
 
     return [leftStroke, rightStroke];

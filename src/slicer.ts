@@ -29,6 +29,7 @@ export default class Slicer {
         props: {
           color: new PropertyStack([stroke.color]),
           weight: new PropertyStack([stroke.weight]),
+          brush: new PropertyStack([stroke.brush]),
         },
       });
 
@@ -40,6 +41,7 @@ export default class Slicer {
         props: {
           color: new PropertyStack([stroke.color]),
           weight: new PropertyStack([stroke.weight]),
+          brush: new PropertyStack([stroke.brush]),
         },
       });
 
@@ -47,9 +49,9 @@ export default class Slicer {
     }
   }
 
-  getSlicePoints(slice: StrokeSlice): Array<StrokePoint> {
+  getSlicePoints(slice: StrokeSlice, step: number = 1): Array<StrokePoint> {
     const stroke = this.strokemanager.getStroke(slice.stroke_id);
-    return stroke.getPointsForSlice(slice, 1);
+    return stroke.getPointsForSlice(slice, step);
   }
 
   render(r: Render) {
@@ -79,6 +81,7 @@ export type StrokeSlice = {
 export type Props = {
   color: PropertyStack<string>;
   weight: PropertyStack<number>;
+  brush: PropertyStack<string>;
 };
 
 function getRandomColor(seed: number): string {

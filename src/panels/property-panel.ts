@@ -40,7 +40,27 @@ const Panel = (drawtool: DrawTool) => {
           renderValue: (value: number) => m(Circle, { diameter: value * 2 }),
           options: [1, 3, 5, 7, 9, 11, 13],
         }),
+        m(Property, {
+          name: "Brush",
+          value: drawtool.brush,
+          onchange: (value: string) => (drawtool.brush = value),
+          renderValue: (value: string) => m(".mode", brushIcon(value)),
+          options: ["pen", "pencil", "marker", "brush"],
+        }),
       ]);
     },
   };
 };
+
+function brushIcon(brush: string): string {
+  if (brush == "pen") {
+    return "✒️";
+  } else if (brush == "pencil") {
+    return "✏️";
+  } else if (brush == "marker") {
+    return "🖍️";
+  } else if (brush == "brush") {
+    return "🖌️";
+  }
+  return "";
+}
