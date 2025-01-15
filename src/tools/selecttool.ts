@@ -12,12 +12,12 @@ export default class SelectTool implements Tool {
   selected: boolean = false;
   moved: boolean = false;
 
-  cut: boolean = true;
+  mode: "whole" | "cut" | "noodle" = "whole";
 
   start() {
     this.selected = false;
     this.moved = false;
-    this.selectionmanager.clearHull();
+    this.selectionmanager.reset();
   }
 
   constructor(selectionmanager: SelectionManager) {
@@ -29,7 +29,7 @@ export default class SelectTool implements Tool {
       this.selectionmanager.beginSelection(p.world);
     } else {
       if (!this.moved) {
-        if (this.cut) {
+        if (this.mode == "cut") {
           this.selectionmanager.cutSelection();
         }
         this.moved = true;
@@ -56,5 +56,27 @@ export default class SelectTool implements Tool {
       this.selected = true;
     }
     m.redraw();
+  }
+
+  updateColor(color: string, value: string) {
+    if (!this.moved) {
+      if (this.mode == "cut") {
+        this.selectionmanager.cutSelection();
+      }
+      this.moved = true;
+      this.selectionmanager.clearHull();
+    }
+    this.selectionmanager.updateColor(color, value);
+  }
+
+  narrowToColor(color: string) {
+    if (!this.moved) {
+      if (this.mode == "cut") {
+        this.selectionmanager.cutSelection();
+      }
+      this.moved = true;
+      this.selectionmanager.clearHull();
+    }
+    this.selectionmanager.narrowToColor(color);
   }
 }

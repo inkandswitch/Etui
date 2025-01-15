@@ -67,6 +67,14 @@ export default class SelectionManager {
     this.strokes = Array.from(this.intersections.keys());
   }
 
+  reset() {
+    this.hull = [];
+    this.intersections = new Map();
+    this.strokes = [];
+    this.selectedColors = new Set();
+    this.selectedWeights = new Set();
+  }
+
   clearHull() {
     this.intersections = new Map();
     this.hull = [];

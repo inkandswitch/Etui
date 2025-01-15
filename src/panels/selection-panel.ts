@@ -18,16 +18,21 @@ const Panel = (selecttool: SelectTool) => {
       if (!selecttool.active) return;
 
       const colors = Array.from(selecttool.selectionmanager.selectedColors);
-      return m(
-        ".property_panel",
+      return m(".property_panel", [
+        m(Property, {
+          name: "Mode",
+          value: selecttool.mode,
+          onchange: (value: string) => (selecttool.mode = value as any),
+          renderValue: (value: string) => m(".mode", modeIcon(value)),
+          options: ["whole", "cut", "noodle"],
+        }),
         colors.map((color) => {
           return m(Property, {
             name: "Color",
             value: color,
-            onchange: (value: string) =>
-              selecttool.selectionmanager.updateColor(color, value),
+            onchange: (value: string) => selecttool.updateColor(color, value),
             onrightclick: () => {
-              selecttool.selectionmanager.narrowToColor(color);
+              selecttool.narrowToColor(color);
             },
             renderValue: (value: string) =>
               m(".swatch", { style: `background: ${value};` }),
@@ -42,7 +47,18 @@ const Panel = (selecttool: SelectTool) => {
             ],
           });
         }),
-      );
+      ]);
     },
   };
 };
+
+function modeIcon(mode: string) {
+  switch (mode) {
+    case "whole":
+      return "🥦";
+    case "cut":
+      return "✂️";
+    case "noodle":
+      return "🍜";
+  }
+}
