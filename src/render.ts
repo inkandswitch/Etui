@@ -3,6 +3,7 @@ import Camera from "./camera";
 export default class Render {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
+  pattern: CanvasPattern | null = null;
 
   constructor() {
     this.canvas = document.createElement("canvas");
@@ -16,6 +17,8 @@ export default class Render {
     this.canvas.style.height = window.innerHeight + "px";
 
     this.ctx.scale(dpr, dpr);
+
+    //this.createNoiseTexture(100, 100);
   }
 
   clear() {
@@ -97,10 +100,29 @@ export default class Render {
       this.ctx.stroke();
     }
   }
+
+  createNoiseTexture(width: number, height: number) {
+    const tempCanvas = document.createElement("canvas");
+    tempCanvas.width = width;
+    tempCanvas.height = height;
+    const tempCtx = tempCanvas.getContext("2d")!;
+    const imageData = tempCtx.createImageData(width, height);
+    const data = imageData.data;
+
+    for (let i = 0; i < data.length; i += 4) {
+      const value = Math.random() * 255; // Random grayscale value
+      data[i] = data[i + 1] = data[i + 2] = value; // R, G, B
+      data[i + 3] = 50; // Alpha
+    }
+
+    tempCtx.putImageData(imageData, 0, 0);
+    this.pattern = this.ctx.createPattern(tempCanvas, "repeat");
+    return tempCanvas;
+  }
 }
 
 export type RenderStyle = {
-  fillStyle: string;
+  fillStyle: string | CanvasPattern;
   strokeStyle: string;
   font: string | null;
   lineWidth: number;
@@ -119,7 +141,7 @@ export function defaultStyle(): RenderStyle {
   };
 }
 
-export function fill(fillStyle: string): RenderStyle {
+export function fill(fillStyle: string | CanvasPattern): RenderStyle {
   let s = defaultStyle();
   s.fillStyle = fillStyle;
   s.doStroke = false;

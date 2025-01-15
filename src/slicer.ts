@@ -39,7 +39,7 @@ export default class Slicer {
         end: stroke.length,
         props: {
           color: new PropertyStack([stroke.color, (c: string) => `dark${c}`]),
-          weight: new PropertyStack([stroke.weight, 4]),
+          weight: new PropertyStack([stroke.weight]),
         },
       });
 

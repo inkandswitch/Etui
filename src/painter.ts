@@ -37,7 +37,14 @@ export default class Painter {
   render(r: Render) {
     for (const inklets of this.inklets.values()) {
       for (const inklet of inklets) {
-        r.circle(inklet.x, inklet.y, inklet.weight, fill(inklet.color));
+        //r.circle(inklet.x, inklet.y, inklet.weight, fill(inklet.color + "10"));
+        r.rect(
+          inklet.x - inklet.weight,
+          inklet.y - inklet.weight * 2,
+          inklet.weight * 2,
+          inklet.weight * 4,
+          fill(inklet.color),
+        );
       }
     }
   }
