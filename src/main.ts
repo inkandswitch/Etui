@@ -17,6 +17,7 @@ import SelectTool from "./tools/selecttool";
 import SelectionManager from "./selection-manager";
 
 import Stroke from "./stroke";
+import SelectionPanel from "./panels/selection-panel";
 
 const render = new Render();
 const camera = new Camera();
@@ -38,37 +39,38 @@ toolmanager.register("select", selecttool);
 // Create panels
 new ToolPanel(toolmanager);
 new PropertyPanel(drawtool);
+new SelectionPanel(selecttool);
 
 // Handle input
 new Input(camera, toolmanager);
 
-// Example
-const s = new Stroke("red", 1);
-s.addPoint({
-  pressure: 1,
-  tiltX: 0,
-  tiltY: 0,
-  world: { x: 0, y: 0 },
-  delta: { x: 0, y: 0 },
-});
+// // Example
+// const s = new Stroke("red", 1);
+// s.addPoint({
+//   pressure: 1,
+//   tiltX: 0,
+//   tiltY: 0,
+//   world: { x: 0, y: 0 },
+//   delta: { x: 0, y: 0 },
+// });
 
-s.addPoint({
-  pressure: 1,
-  tiltX: 0,
-  tiltY: 0,
-  world: { x: 100, y: 100 },
-  delta: { x: 100, y: 100 },
-});
+// s.addPoint({
+//   pressure: 1,
+//   tiltX: 0,
+//   tiltY: 0,
+//   world: { x: 100, y: 100 },
+//   delta: { x: 100, y: 100 },
+// });
 
-s.addPoint({
-  pressure: 1,
-  tiltX: 0,
-  tiltY: 0,
-  world: { x: 200, y: 100 },
-  delta: { x: 100, y: 0 },
-});
+// s.addPoint({
+//   pressure: 1,
+//   tiltX: 0,
+//   tiltY: 0,
+//   world: { x: 200, y: 100 },
+//   delta: { x: 100, y: 0 },
+// });
 
-strokemanager.addStroke(s);
+// strokemanager.addStroke(s);
 
 tick((dt: number) => {
   render.clear();
@@ -78,7 +80,7 @@ tick((dt: number) => {
   painter.update();
   painter.render(render);
 
-  strokemanager.render(render);
+  //strokemanager.render(render);
 
   selectionmanager.render(render);
 

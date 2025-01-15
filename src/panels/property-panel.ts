@@ -1,5 +1,6 @@
 import m from "mithril";
-import { DrawTool } from "../tools/drawtool";
+import DrawTool from "../tools/drawtool";
+import { Property, Circle } from "./property";
 
 export default class PropertyPanel {
   panel: HTMLDivElement;
@@ -14,6 +15,7 @@ export default class PropertyPanel {
 const Panel = (drawtool: DrawTool) => {
   return {
     view() {
+      if (!drawtool.active) return;
       return m(".property_panel", [
         m(Property, {
           name: "Color",
@@ -41,53 +43,4 @@ const Panel = (drawtool: DrawTool) => {
       ]);
     },
   };
-};
-
-const Property = {
-  open: false,
-  view(vnode: any) {
-    const open = vnode.state.open;
-    const color = vnode.attrs.value;
-    const onchange = vnode.attrs.onchange;
-    const options = vnode.attrs.options;
-    const renderValue = vnode.attrs.renderValue;
-
-    return m(
-      ".property",
-      {
-        title: vnode.attrs.name,
-        onclick: () => {
-          vnode.state.open = !open;
-        },
-      },
-      [
-        renderValue(color),
-        m(
-          ".property_menu",
-          {
-            class: open ? "--open" : "",
-          },
-          options.map((c: any) =>
-            m(
-              ".option",
-              {
-                onclick: () => onchange(c),
-              },
-              renderValue(c),
-            ),
-          ),
-        ),
-      ],
-    );
-  },
-};
-
-const Circle = {
-  view(vnode: any) {
-    const diameter = vnode.attrs.diameter;
-    return m(
-      ".circle_wrapper",
-      m(".circle", { style: `width: ${diameter}px; height: ${diameter}px;` }),
-    );
-  },
 };

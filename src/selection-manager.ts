@@ -2,7 +2,6 @@ import { Point } from "./geom/point";
 import { Vec } from "./geom/vec";
 import { Line } from "./geom/line";
 import Render, { fill, fillAndStroke } from "./render";
-import Stroke, { CutPoint } from "./stroke";
 import StrokeManager from "./stroke-manager";
 import { Polygon } from "./geom/polygon";
 
@@ -11,6 +10,9 @@ export default class SelectionManager {
   hull: Array<Point> = [];
   intersections: Map<number, Array<number>> = new Map();
   strokes: Array<number> = [];
+
+  selectedColors: Set<string> = new Set();
+  selectedWeights: Set<number> = new Set();
 
   constructor(strokemanager: StrokeManager) {
     this.strokemanager = strokemanager;
@@ -24,10 +26,16 @@ export default class SelectionManager {
     this.hull.push(p);
   }
 
-  endSelection() {
+  findStrokesInsideHull() {
     this.intersections = new Map();
 
     for (const [stroke_id, stroke] of this.strokemanager.strokes) {
+      // Check if the first point is inside the polygon
+      let inside = Polygon.isPointInside(this.hull, stroke.points[0]);
+      if (inside) {
+        this.intersections.set(stroke_id, []);
+      }
+
       let length = 0;
       for (let i = 0; i < stroke.points.length - 1; i++) {
         const stroke_point_a = stroke.points[i];
@@ -55,6 +63,13 @@ export default class SelectionManager {
         }
       }
     }
+
+    this.strokes = Array.from(this.intersections.keys());
+  }
+
+  clearHull() {
+    this.intersections = new Map();
+    this.hull = [];
   }
 
   cutSelection() {
@@ -88,9 +103,6 @@ export default class SelectionManager {
         this.strokes.push(strokeId);
       }
     }
-
-    this.intersections = new Map();
-    this.hull = [];
   }
 
   moveSelection(delta: Vec) {
@@ -101,6 +113,36 @@ export default class SelectionManager {
         point.y += delta.y;
       }
     }
+  }
+
+  // Props
+  computeSelectedProperties() {
+    this.selectedColors = new Set();
+    this.selectedWeights = new Set();
+
+    for (const stroke_id of this.strokes) {
+      const stroke = this.strokemanager.getStroke(stroke_id);
+      this.selectedColors.add(stroke.color);
+      this.selectedWeights.add(stroke.weight);
+    }
+  }
+
+  narrowToColor(color: string) {
+    this.strokes = this.strokes.filter((stroke_id) => {
+      const stroke = this.strokemanager.getStroke(stroke_id);
+      return stroke.color == color;
+    });
+    this.computeSelectedProperties();
+  }
+
+  updateColor(old_color: string, new_color: string) {
+    for (const stroke_id of this.strokes) {
+      const stroke = this.strokemanager.getStroke(stroke_id);
+      if (stroke.color == old_color) {
+        stroke.color = new_color;
+      }
+    }
+    this.computeSelectedProperties();
   }
 
   render(r: Render) {

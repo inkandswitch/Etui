@@ -9,9 +9,13 @@ export default class DrawTool implements Tool {
   color: string;
   weight: number;
 
+  active: boolean = false;
+
+  start() {}
+
   constructor(strokemanager: StrokeManager) {
     this.strokemanager = strokemanager;
-    this.color = "black";
+    this.color = "#000000";
     this.weight = 1;
   }
 
