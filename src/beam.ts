@@ -37,6 +37,7 @@ export default class Beam {
     // const ext_c = Vec.sub(c, Vec.sub(c, b));
 
     this.strokes = strokes;
+    this.parameterize();
 
     // Generate beam coordinates  (t, u) for each point on the stroke
     // t is the distance along the stroke normalized to 0-1
@@ -52,9 +53,11 @@ export default class Beam {
     //   const u = Vec.cross(vec, beamvec) / Vec.len(beamvec);
     //   this.beamCoordinates.push({ t, u });
     // }
+  }
 
+  parameterize() {
     this.beamCoordinates = [];
-    for (const stroke of strokes) {
+    for (const stroke of this.strokes) {
       const beamCoordinates: Array<BeamCoordinate> = [];
       for (const point of stroke.points) {
         const t = closestPointOnCurve(this.curve, point);
@@ -114,6 +117,8 @@ export default class Beam {
   insertControlPointNear(p: Point) {
     const t = closestPointOnCurve(this.curve, p);
     this.controlPoints = insertCatmullRomControlPoint(this.controlPoints, t);
+    this.curve = parametricCatmullRomSpline(this.controlPoints);
+    this.parameterize();
   }
 
   render(r: Render) {
