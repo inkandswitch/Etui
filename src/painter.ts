@@ -80,8 +80,8 @@ function pencilBrush(
   point: StrokePoint,
 ): Inklet {
   return {
-    x: point.x + pseudoRandomFloat(point.distance) * weight - weight * 0.5,
-    y: point.y + pseudoRandomFloat(point.distance) * weight - weight * 0.5,
+    x: point.x + smoothPseudoRandomFloat(point.distance) * weight - weight * 0.5,
+    y: point.y + smoothPseudoRandomFloat(point.distance) * weight - weight * 0.5,
     color: color + "30",
     weight: weight + weight * 0.1 * point.pressure,
     shape: 0,
@@ -120,3 +120,11 @@ function pseudoRandomFloat(seed: number): number {
   let x = Math.sin(seed) * 10000;
   return x - Math.floor(x);
 }
+
+function smoothPseudoRandomFloat(seed: number): number {
+  const x = Math.sin(seed) * 10000;
+  const y = Math.sin(seed + 1) * 10000;
+  const z = Math.sin(seed + 2) * 10000;
+  return (x - Math.floor(x) + y - Math.floor(y) + z - Math.floor(z)) / 3;
+}
+

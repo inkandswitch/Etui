@@ -34,9 +34,9 @@ export default class DrawTool implements Tool {
     }
   }
 
-  onMouseMove(p: MouseData): void {}
+  onMouseMove(_p: MouseData): void {}
 
-  onMouseUp(p: MouseData): void {
+  onMouseUp(_p: MouseData): void {
     if (this.stroke) {
       this.stroke = null;
     }

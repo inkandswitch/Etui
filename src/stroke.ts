@@ -1,6 +1,5 @@
 import { StrokePoint } from "./geom/strokepoint";
 import { Vec } from "./geom/vec";
-import { Line } from "./geom/line";
 import Render, { stroke, fill } from "./render";
 import { MouseData } from "./input";
 import { StrokeSlice } from "./slicer";
@@ -55,8 +54,19 @@ export default class Stroke {
       }
       this.points.push(newPoint);
     }
+  }
 
-    console.log(this);
+  recomputeLengths() {
+    this.length = 0;
+    for (let i = 0; i < this.points.length; i++) {
+      if (i == 0) {
+        this.points[i].distance = 0;
+      } else {
+        // Recalculate the distance between points
+        this.points[i].distance = Vec.dist(this.points[i - 1], this.points[i]);
+        this.length += this.points[i].distance;
+      }
+    }
   }
 
   getPointAtLength(length: number): StrokePoint {

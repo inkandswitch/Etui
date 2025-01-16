@@ -1,5 +1,5 @@
 import Render from "./render";
-import Stroke, { CutPoint } from "./stroke";
+import Stroke from "./stroke";
 
 export default class StrokeManager {
   strokes: Map<number, Stroke> = new Map();

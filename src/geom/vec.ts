@@ -17,6 +17,8 @@ Vec.subS = (a: Vec, b: number): Vec => Vec(a.x - b, a.y - b);
 Vec.mulS = (a: Vec, b: number): Vec => Vec(a.x * b, a.y * b);
 Vec.divS = (a: Vec, b: number): Vec => Vec(a.x / b, a.y / b);
 
+Vec.cross = (a: Vec, b: Vec): number => a.x * b.y - a.y * b.x;
+
 Vec.dot = (a: Vec, b: Vec): number => a.x * b.x + a.y * b.y;
 
 Vec.project = (a: Vec, b: Vec): Vec => {
