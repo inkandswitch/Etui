@@ -3,29 +3,13 @@ import { Vec } from "./vec";
 
 export type ParametricCurve = (t: number) => Point;
 
-export function catmullRomSplinePoint(
+export function catmullRomPoint(
   p0: Point,
   p1: Point,
   p2: Point,
   p3: Point,
   t: number,
 ): Point {
-  // // For t < 0, extrapolate linearly from p1 in the direction from p0 to p1
-  // if (t < 0) {
-  //   return {
-  //     x: p1.x + t * (p1.x - p0.x),
-  //     y: p1.y + t * (p1.y - p0.y),
-  //   };
-  // }
-
-  // // For t > 1, extrapolate linearly from p2 in the direction from p2 to p3
-  // if (t > 1) {
-  //   return {
-  //     x: p2.x + (t - 1) * (p3.x - p2.x),
-  //     y: p2.y + (t - 1) * (p3.y - p2.y),
-  //   };
-  // }
-
   const t2 = t * t;
   const t3 = t2 * t;
 
@@ -46,13 +30,13 @@ export function catmullRomSplinePoint(
   return { x, y };
 }
 
-export function parametricCatmullRomSpline(
+export function parametricCatmullRom(
   p0: Point,
   p1: Point,
   p2: Point,
   p3: Point,
 ): (t: number) => Point {
-  return (t: number) => catmullRomSplinePoint(p0, p1, p2, p3, t);
+  return (t: number) => catmullRomPoint(p0, p1, p2, p3, t);
 }
 
 export function parametricLine(p0: Point, p1: Point): (t: number) => Point {
@@ -63,19 +47,57 @@ export function parametricLine(p0: Point, p1: Point): (t: number) => Point {
   };
 }
 
-// Splining
-export function joinCurves(
-  curve1: ParametricCurve,
-  curve2: ParametricCurve
+export function parametricCatmullRomSpline(
+  points: Array<Point>,
 ): ParametricCurve {
+  if (points.length < 2) {
+    throw new Error("At least 2 points are required to create a spline");
+  }
+
+  // Create artificial end points by mirroring
+  const p0 = {
+    x: 2 * points[0].x - points[1].x,
+    y: 2 * points[0].y - points[1].y,
+  };
+
+  const pLast = {
+    x: 2 * points[points.length - 1].x - points[points.length - 2].x,
+    y: 2 * points[points.length - 1].y - points[points.length - 2].y,
+  };
+
+  // If we only have 2 points, create a simple curve with mirrored control points
+  if (points.length === 2) {
+    return parametricCatmullRom(p0, points[0], points[1], pLast);
+  }
+
+  // Create segments and join them
+  const segments: Array<ParametricCurve> = [];
+  for (let i = 0; i < points.length - 1; i++) {
+    const p1 = i === 0 ? p0 : points[i - 1];
+    const p2 = points[i];
+    const p3 = points[i + 1];
+    const p4 = i === points.length - 2 ? pLast : points[i + 2];
+
+    segments.push(parametricCatmullRom(p1, p2, p3, p4));
+  }
+
+  // Join all segments
+  return joinCurves(segments);
+}
+
+// Splining
+export function joinCurves(curves: ParametricCurve[]): ParametricCurve {
   return (t: number) => {
-    if (t <= 0.5) {
-      // Scale t to [0,1] for the first curve
-      return curve1(t * 2);
-    } else {
-      // Scale t to [0,1] for the second curve
-      return curve2((t - 0.5) * 2);
+    const n = curves.length;
+    const segmentLength = 1 / n;
+    const segmentIndex = Math.floor(t / segmentLength);
+    const localT = (t - segmentIndex * segmentLength) / segmentLength;
+
+    if (segmentIndex >= n) {
+      return curves[n - 1](1);
     }
+
+    return curves[segmentIndex](localT);
   };
 }
 
