@@ -63,6 +63,22 @@ export function parametricLine(p0: Point, p1: Point): (t: number) => Point {
   };
 }
 
+// Splining
+export function joinCurves(
+  curve1: ParametricCurve,
+  curve2: ParametricCurve
+): ParametricCurve {
+  return (t: number) => {
+    if (t <= 0.5) {
+      // Scale t to [0,1] for the first curve
+      return curve1(t * 2);
+    } else {
+      // Scale t to [0,1] for the second curve
+      return curve2((t - 0.5) * 2);
+    }
+  };
+}
+
 // Generic curve functions
 export function curvePoints(
   curve: ParametricCurve,

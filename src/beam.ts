@@ -7,6 +7,7 @@ import {
   catmullRomSplinePoint,
   closestPointOnCurve,
   curvePoints,
+  joinCurves,
   parametricCatmullRomSpline,
   ParametricCurve,
   tangentAtPointOnCurve,
@@ -20,16 +21,23 @@ export default class Beam {
 
   constructor(strokes: Array<Stroke>) {
     // Create four control points for the beam
-    const b = Point.fromStrokePoint(strokes[0].points[0]);
+    const a = Point.fromStrokePoint(strokes[0].points[0]);
+    const b = Point.fromStrokePoint(
+      strokes[0].getPointAtLength(strokes[0].length / 2),
+    );
     const c = Point.fromStrokePoint(
       strokes[0].points[strokes[0].points.length - 1],
     );
-    const bc = Vec.sub(b, c);
-    const a = Vec.add(b, bc);
-    const d = Vec.sub(c, bc);
 
-    this.controlPoints = [a, b, c, d];
-    this.curve = parametricCatmullRomSpline(a, b, c, d);
+    this.controlPoints = [a, b, c];
+
+    const ext_a = Vec.sub(a, Vec.sub(a, b));
+    const ext_c = Vec.sub(c, Vec.sub(c, b));
+
+    this.curve = joinCurves(
+      parametricCatmullRomSpline(ext_a, a, b, c),
+      parametricCatmullRomSpline(a, b, c, ext_c),
+    );
 
     this.strokes = strokes;
 
@@ -84,6 +92,16 @@ export default class Beam {
     // }
 
     // this.stroke.recomputeLengths();
+
+    // Update the curve points
+    const [a, b, c] = this.controlPoints;
+    const ext_a = Vec.sub(a, Vec.sub(a, b));
+    const ext_c = Vec.sub(c, Vec.sub(c, b));
+
+    this.curve = joinCurves(
+      parametricCatmullRomSpline(ext_a, a, b, c),
+      parametricCatmullRomSpline(a, b, c, ext_c),
+    );
 
     for (let i = 0; i < this.strokes.length; i++) {
       let stroke = this.strokes[i];
