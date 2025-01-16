@@ -1,6 +1,6 @@
 import m from "mithril";
 import DrawTool from "../tools/drawtool";
-import { Property, Circle } from "./property";
+import { Property, Circle, brushIcon } from "./property";
 
 export default class PropertyPanel {
   panel: HTMLDivElement;
@@ -51,16 +51,3 @@ const Panel = (drawtool: DrawTool) => {
     },
   };
 };
-
-function brushIcon(brush: string): string {
-  if (brush == "pen") {
-    return "✒️";
-  } else if (brush == "pencil") {
-    return "✏️";
-  } else if (brush == "marker") {
-    return "🖍️";
-  } else if (brush == "brush") {
-    return "🖌️";
-  }
-  return "";
-}

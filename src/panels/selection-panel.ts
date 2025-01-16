@@ -1,6 +1,6 @@
 import m from "mithril";
 import SelectTool from "../tools/selecttool";
-import { Property, Circle } from "./property";
+import { Property, Circle, brushIcon } from "./property";
 
 export default class SelectionPanel {
   panel: HTMLDivElement;
@@ -18,6 +18,9 @@ const Panel = (selecttool: SelectTool) => {
       if (!selecttool.active) return;
 
       const colors = Array.from(selecttool.selectionmanager.selectedColors);
+      const weights = Array.from(selecttool.selectionmanager.selectedWeights);
+      const brushes = Array.from(selecttool.selectionmanager.selectedBrushes);
+
       return m(".property_panel", [
         m(Property, {
           name: "Mode",
@@ -45,6 +48,27 @@ const Panel = (selecttool: SelectTool) => {
               "#FFA987",
               "#FFD966",
             ],
+          });
+        }),
+        weights.map((weight) => {
+          return m(Property, {
+            name: "Weight",
+            value: weight,
+            onchange: (value: number) => selecttool.updateWeight(weight, value),
+            onrightclick: () => {
+              selecttool.narrowToWeight(weight);
+            },
+            renderValue: (value: number) => m(Circle, { diameter: value * 2 }),
+            options: [1, 3, 5, 7, 9, 11, 13],
+          });
+        }),
+        brushes.map((brush) => {
+          return m(Property, {
+            name: "Brush",
+            value: brush,
+            onchange: (value: string) => selecttool.updateBrush(brush, value),
+            renderValue: (value: string) => m(".mode", brushIcon(value)),
+            options: ["pen", "pencil", "marker", "brush"],
           });
         }),
       ]);

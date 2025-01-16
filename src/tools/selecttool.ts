@@ -58,7 +58,7 @@ export default class SelectTool implements Tool {
     m.redraw();
   }
 
-  updateColor(color: string, value: string) {
+  cutIfNeeded() {
     if (!this.moved) {
       if (this.mode == "cut") {
         this.selectionmanager.cutSelection();
@@ -66,17 +66,35 @@ export default class SelectTool implements Tool {
       this.moved = true;
       this.selectionmanager.clearHull();
     }
+  }
+
+  updateColor(color: string, value: string) {
+    this.cutIfNeeded();
     this.selectionmanager.updateColor(color, value);
   }
 
   narrowToColor(color: string) {
-    if (!this.moved) {
-      if (this.mode == "cut") {
-        this.selectionmanager.cutSelection();
-      }
-      this.moved = true;
-      this.selectionmanager.clearHull();
-    }
+    this.cutIfNeeded();
     this.selectionmanager.narrowToColor(color);
+  }
+
+  updateWeight(weight: number, value: number) {
+    this.cutIfNeeded();
+    this.selectionmanager.updateWeight(weight, value);
+  }
+
+  narrowToWeight(weight: number) {
+    this.cutIfNeeded();
+    this.selectionmanager.narrowToWeight(weight);
+  }
+
+  updateBrush(brush: string, value: string) {
+    this.cutIfNeeded();
+    this.selectionmanager.updateBrush(brush, value);
+  }
+
+  narrowToBrush(brush: string) {
+    this.cutIfNeeded();
+    this.selectionmanager.narrowToBrush(brush);
   }
 }

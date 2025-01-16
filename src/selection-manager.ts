@@ -13,6 +13,7 @@ export default class SelectionManager {
 
   selectedColors: Set<string> = new Set();
   selectedWeights: Set<number> = new Set();
+  selectedBrushes: Set<string> = new Set();
 
   constructor(strokemanager: StrokeManager) {
     this.strokemanager = strokemanager;
@@ -73,6 +74,7 @@ export default class SelectionManager {
     this.strokes = [];
     this.selectedColors = new Set();
     this.selectedWeights = new Set();
+    this.selectedBrushes = new Set();
   }
 
   clearHull() {
@@ -127,11 +129,13 @@ export default class SelectionManager {
   computeSelectedProperties() {
     this.selectedColors = new Set();
     this.selectedWeights = new Set();
+    this.selectedBrushes = new Set();
 
     for (const stroke_id of this.strokes) {
       const stroke = this.strokemanager.getStroke(stroke_id);
       this.selectedColors.add(stroke.color);
       this.selectedWeights.add(stroke.weight);
+      this.selectedBrushes.add(stroke.brush);
     }
   }
 
@@ -148,6 +152,42 @@ export default class SelectionManager {
       const stroke = this.strokemanager.getStroke(stroke_id);
       if (stroke.color == old_color) {
         stroke.color = new_color;
+      }
+    }
+    this.computeSelectedProperties();
+  }
+
+  narrowToWeight(weight: number) {
+    this.strokes = this.strokes.filter((stroke_id) => {
+      const stroke = this.strokemanager.getStroke(stroke_id);
+      return stroke.weight == weight;
+    });
+    this.computeSelectedProperties();
+  }
+
+  updateWeight(old_weight: number, new_weight: number) {
+    for (const stroke_id of this.strokes) {
+      const stroke = this.strokemanager.getStroke(stroke_id);
+      if (stroke.weight == old_weight) {
+        stroke.weight = new_weight;
+      }
+    }
+    this.computeSelectedProperties();
+  }
+
+  narrowToBrush(brush: string) {
+    this.strokes = this.strokes.filter((stroke_id) => {
+      const stroke = this.strokemanager.getStroke(stroke_id);
+      return stroke.brush == brush;
+    });
+    this.computeSelectedProperties();
+  }
+
+  updateBrush(old_brush: string, new_brush: string) {
+    for (const stroke_id of this.strokes) {
+      const stroke = this.strokemanager.getStroke(stroke_id);
+      if (stroke.brush == old_brush) {
+        stroke.brush = new_brush;
       }
     }
     this.computeSelectedProperties();
