@@ -80,6 +80,8 @@ tick((dt: number) => {
   render.clear();
   render.beginOffset(camera);
 
+  beammanager.render(render);
+
   slicer.update();
   painter.update();
   painter.render(render);
@@ -87,7 +89,6 @@ tick((dt: number) => {
   //strokemanager.render(render);
 
   selectionmanager.render(render);
-  beammanager.render(render);
 
   render.endOffset();
 });

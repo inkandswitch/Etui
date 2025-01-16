@@ -14,26 +14,28 @@ import {
 
 export default class Beam {
   controlPoints: Array<Point>;
-  stroke: Stroke;
-  beamCoordinates: Array<BeamCoordinate>;
+  strokes: Array<Stroke>;
+  beamCoordinates: Array<Array<BeamCoordinate>>;
   curve: ParametricCurve;
 
-  constructor(stroke: Stroke) {
+  constructor(strokes: Array<Stroke>) {
     // Create four control points for the beam
-    const b = Point.fromStrokePoint(stroke.points[0]);
-    const c = Point.fromStrokePoint(stroke.points[stroke.points.length - 1]);
+    const b = Point.fromStrokePoint(strokes[0].points[0]);
+    const c = Point.fromStrokePoint(
+      strokes[0].points[strokes[0].points.length - 1],
+    );
     const bc = Vec.sub(b, c);
     const a = Vec.add(b, bc);
     const d = Vec.sub(c, bc);
 
     this.controlPoints = [a, b, c, d];
-    this.stroke = stroke;
+    this.curve = parametricCatmullRomSpline(a, b, c, d);
+
+    this.strokes = strokes;
 
     // Generate beam coordinates  (t, u) for each point on the stroke
     // t is the distance along the stroke normalized to 0-1
     // u is the distance perpendicular to the stroke
-
-    this.beamCoordinates = [];
 
     // // Create vector for the beam
     // const beamvec = Vec.sub(this.controlPoints[1], this.controlPoints[0]);
@@ -46,14 +48,20 @@ export default class Beam {
     //   this.beamCoordinates.push({ t, u });
     // }
 
-    this.curve = parametricCatmullRomSpline(a, b, c, d);
-    for (const point of stroke.points) {
-      const t = closestPointOnCurve(this.curve, point);
-      const closest_point = this.curve(t);
-      const tangent = tangentAtPointOnCurve(this.curve, t);
-      const vec_to_point = Vec.sub(point, closest_point);
-      const u = Math.sign(Vec.cross(vec_to_point, tangent)) * Vec.dist(point, closest_point);
-      this.beamCoordinates.push({ t, u });
+    this.beamCoordinates = [];
+    for (const stroke of strokes) {
+      const beamCoordinates: Array<BeamCoordinate> = [];
+      for (const point of stroke.points) {
+        const t = closestPointOnCurve(this.curve, point);
+        const closest_point = this.curve(t);
+        const tangent = tangentAtPointOnCurve(this.curve, t);
+        const vec_to_point = Vec.sub(point, closest_point);
+        const u =
+          Math.sign(Vec.cross(vec_to_point, tangent)) *
+          Vec.dist(point, closest_point);
+        beamCoordinates.push({ t, u });
+      }
+      this.beamCoordinates.push(beamCoordinates);
     }
   }
 
@@ -77,24 +85,27 @@ export default class Beam {
 
     // this.stroke.recomputeLengths();
 
-    for (let i = 0; i < this.stroke.points.length; i++) {
-      const stroke_point = this.stroke.points[i];
-      const bc = this.beamCoordinates[i];
+    for (let i = 0; i < this.strokes.length; i++) {
+      let stroke = this.strokes[i];
+      for (let j = 0; j < stroke.points.length; j++) {
+        const stroke_point = stroke.points[j];
+        const bc = this.beamCoordinates[i][j];
 
-      const curvePoint = this.curve(bc.t);
-      const curveTangent = tangentAtPointOnCurve(this.curve, bc.t);
-      const perp = Vec(curveTangent.y, -curveTangent.x);
-      const newPoint = Vec.add(curvePoint, Vec.mul(perp, bc.u));
-      stroke_point.x = newPoint.x;
-      stroke_point.y = newPoint.y;
+        const curvePoint = this.curve(bc.t);
+        const curveTangent = tangentAtPointOnCurve(this.curve, bc.t);
+        const perp = Vec(curveTangent.y, -curveTangent.x);
+        const newPoint = Vec.add(curvePoint, Vec.mul(perp, bc.u));
+        stroke_point.x = newPoint.x;
+        stroke_point.y = newPoint.y;
+      }
+
+      stroke.recomputeLengths();
     }
-
-    this.stroke.recomputeLengths();
   }
 
   render(r: Render) {
     const points = curvePoints(this.curve);
-    r.poly(points, stroke("#FF000055", 2), false);
+    r.poly(points, stroke("#FF000010", 2), false);
 
     for (const pt of this.controlPoints) {
       r.circle(pt.x, pt.y, 5, fill("#FF0000"));

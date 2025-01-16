@@ -10,6 +10,22 @@ export function catmullRomSplinePoint(
   p3: Point,
   t: number,
 ): Point {
+  // // For t < 0, extrapolate linearly from p1 in the direction from p0 to p1
+  // if (t < 0) {
+  //   return {
+  //     x: p1.x + t * (p1.x - p0.x),
+  //     y: p1.y + t * (p1.y - p0.y),
+  //   };
+  // }
+
+  // // For t > 1, extrapolate linearly from p2 in the direction from p2 to p3
+  // if (t > 1) {
+  //   return {
+  //     x: p2.x + (t - 1) * (p3.x - p2.x),
+  //     y: p2.y + (t - 1) * (p3.y - p2.y),
+  //   };
+  // }
+
   const t2 = t * t;
   const t3 = t2 * t;
 
@@ -39,6 +55,15 @@ export function parametricCatmullRomSpline(
   return (t: number) => catmullRomSplinePoint(p0, p1, p2, p3, t);
 }
 
+export function parametricLine(p0: Point, p1: Point): (t: number) => Point {
+  return (t: number) => {
+    const x = p0.x + t * (p1.x - p0.x);
+    const y = p0.y + t * (p1.y - p0.y);
+    return { x, y };
+  };
+}
+
+// Generic curve functions
 export function curvePoints(
   curve: ParametricCurve,
   steps: number = 100,
