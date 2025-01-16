@@ -67,6 +67,9 @@ const Panel = (selecttool: SelectTool) => {
             name: "Brush",
             value: brush,
             onchange: (value: string) => selecttool.updateBrush(brush, value),
+            onrightclick: () => {
+              selecttool.narrowToBrush(brush);
+            },
             renderValue: (value: string) => m(".mode", brushIcon(value)),
             options: ["pen", "pencil", "marker", "brush"],
           });
