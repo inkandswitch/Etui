@@ -4,12 +4,11 @@ import Render, { stroke, fill } from "./render";
 import Stroke from "./stroke";
 
 import {
+  ParametricCurve,
   parametricCatmullRomSpline,
   closestPointOnCurve,
   curvePoints,
-  joinCurves,
-  parametricCatmullRom,
-  ParametricCurve,
+  insertCatmullRomControlPoint,
   tangentAtPointOnCurve,
 } from "./geom/spline";
 
@@ -110,6 +109,11 @@ export default class Beam {
 
       stroke.recomputeLengths();
     }
+  }
+
+  insertControlPointNear(p: Point) {
+    const t = closestPointOnCurve(this.curve, p);
+    this.controlPoints = insertCatmullRomControlPoint(this.controlPoints, t);
   }
 
   render(r: Render) {

@@ -42,4 +42,6 @@ export default class DrawTool implements Tool {
     }
     console.log(this.strokemanager);
   }
+
+  onMouseRightClick(p: MouseData): void {}
 }

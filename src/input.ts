@@ -11,13 +11,13 @@ export type MouseData = {
   tiltY: number;
 };
 
-function toInputEvent(e: PointerEvent, camera: Camera): MouseData {
+function toInputEvent(e: PointerEvent | MouseEvent, camera: Camera): MouseData {
   return {
     world: camera.screenToWorld({ x: e.clientX, y: e.clientY }),
     delta: Vec(e.movementX, e.movementY),
-    pressure: e.pressure || 1,
-    tiltX: e.tiltX || 0,
-    tiltY: e.tiltY || 0,
+    pressure: 'pressure' in e ? e.pressure : 1,
+    tiltX: 'tiltX' in e ? e.tiltX : 0,
+    tiltY: 'tiltY' in e ? e.tiltY : 0,
   };
 }
 
@@ -52,6 +52,11 @@ export default class Input {
         this.down = false;
         this.onMouseUp(toInputEvent(e, camera));
       }
+    });
+
+    window.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+      this.onMouseRightClick(toInputEvent(e, camera));
     });
 
     // pan & pinch to zoom
@@ -91,5 +96,9 @@ export default class Input {
 
   onMouseUp(p: MouseData) {
     this.toolmanager.onMouseUp(p);
+  }
+
+  onMouseRightClick(p: MouseData) {
+    this.toolmanager.onMouseRightClick(p);
   }
 }

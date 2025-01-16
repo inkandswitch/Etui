@@ -56,4 +56,8 @@ export default class BeamTool implements Tool {
   onMouseMove(_p: MouseData): void {}
 
   onMouseUp(_p: MouseData): void {}
+
+  onMouseRightClick(p: MouseData): void {
+    this.beammanager.getBeam(0).insertControlPointNear(p.world);
+  }
 }

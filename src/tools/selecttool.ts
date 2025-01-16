@@ -58,6 +58,8 @@ export default class SelectTool implements Tool {
     m.redraw();
   }
 
+  onMouseRightClick(p: MouseData): void {}
+
   cutIfNeeded() {
     if (!this.moved) {
       if (this.mode == "cut") {

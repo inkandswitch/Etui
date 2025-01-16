@@ -85,6 +85,30 @@ export function parametricCatmullRomSpline(
   return joinCurves(segments);
 }
 
+export function insertCatmullRomControlPoint(
+  points: Array<Point>,
+  t: number
+): Array<Point> {
+  if (points.length < 2) {
+    throw new Error("At least 2 points are required to create a spline");
+  }
+
+  // Create the spline and find the point at t
+  const spline = parametricCatmullRomSpline(points);
+  const newPoint = spline(t);
+
+  // Find which segment the point falls into
+  const n = points.length - 1;
+  const segmentLength = 1 / n;
+  const segmentIndex = Math.floor(t / segmentLength);
+  
+  // Create new array with inserted point
+  const newPoints = [...points];
+  newPoints.splice(segmentIndex + 1, 0, newPoint);
+
+  return newPoints;
+}
+
 // Splining
 export function joinCurves(curves: ParametricCurve[]): ParametricCurve {
   return (t: number) => {
