@@ -27,7 +27,7 @@ const Panel = (selecttool: SelectTool) => {
           value: selecttool.mode,
           onchange: (value: string) => (selecttool.mode = value as any),
           renderValue: (value: string) => m(".mode", modeIcon(value)),
-          options: ["whole", "cut", "noodle"],
+          options: ["whole", "cut"],
         }),
         colors.map((color) => {
           return m(Property, {
