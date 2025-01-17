@@ -27,8 +27,8 @@ const camera = new Camera();
 
 // managers
 const strokemanager = new StrokeManager();
-const selectionmanager = new SelectionManager(strokemanager);
-const beammanager = new BeamManager();
+const beammanager = new BeamManager(strokemanager);
+const selectionmanager = new SelectionManager(strokemanager, beammanager);
 const querymanager = new QueryManager();
 
 // Pipeline

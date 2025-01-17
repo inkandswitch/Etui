@@ -4,9 +4,11 @@ import { Line } from "./geom/line";
 import Render, { fill, fillAndStroke } from "./render";
 import StrokeManager from "./stroke-manager";
 import { Polygon } from "./geom/polygon";
+import BeamManager from "./beam-manager";
 
 export default class SelectionManager {
   strokemanager: StrokeManager;
+  beammanager: BeamManager;
   hull: Array<Point> = [];
   intersections: Map<number, Array<number>> = new Map();
   strokes: Array<number> = [];
@@ -15,8 +17,9 @@ export default class SelectionManager {
   selectedWeights: Set<number> = new Set();
   selectedBrushes: Set<string> = new Set();
 
-  constructor(strokemanager: StrokeManager) {
+  constructor(strokemanager: StrokeManager, beammanager: BeamManager) {
     this.strokemanager = strokemanager;
+    this.beammanager = beammanager;
   }
 
   beginSelection(p: Point) {
@@ -83,10 +86,13 @@ export default class SelectionManager {
   }
 
   cutSelection() {
+    let strokeIdMappings = new Map<number, Array<number>>();
+
     this.strokes = [];
 
     for (const [stroke_id, offsets] of this.intersections) {
       let stroke = this.strokemanager.getStroke(stroke_id);
+      let newStrokes = [];
 
       // If the first point is inside polygon, the inside/outside state is flipped
       let inside = Polygon.isPointInside(this.hull, stroke.points[0]) ? 0 : 1;
@@ -104,15 +110,22 @@ export default class SelectionManager {
         // If the stroke is inside, add the left stroke
         if (i % 2 == inside) {
           this.strokes.push(leftId);
+          newStrokes.push(leftId);
         }
       }
 
       // Add the last stroke
       const strokeId = this.strokemanager.addStroke(stroke);
       if (offsets.length % 2 == inside) {
-        this.strokes.push(strokeId);
+        newStrokes.push(strokeId);
       }
+
+      strokeIdMappings.set(stroke_id, newStrokes);
+      this.strokes.push(...newStrokes);
     }
+
+    // Notify beams of updated ids
+    this.beammanager.updateStrokeIds(strokeIdMappings);
   }
 
   moveSelection(delta: Vec) {

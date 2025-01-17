@@ -16,6 +16,9 @@ export default class BeamTool implements Tool {
 
   active: boolean = false;
 
+  beam: Beam | null = null;
+  mode: "create" | "edit" = "edit";
+
   dragControlPoint: Point | null = null;
 
   constructor(
@@ -30,19 +33,30 @@ export default class BeamTool implements Tool {
 
   start() {
     if (this.selectionmanager.strokes.length > 0) {
-      const selected = this.selectionmanager.strokes.map((sid) => {
-        return this.strokemanager.getStroke(sid);
-      });
-      this.beammanager.addBeam(new Beam(selected));
+      this.mode = "create";
+    } else {
+      this.mode = "edit";
     }
-
-    this.selectionmanager.reset();
   }
 
   onMouseDown(p: MouseData): void {
-    const cp = this.beammanager.getControlPointNear(p.world);
-    if (cp) {
-      this.dragControlPoint = cp;
+    if (this.mode == "create") {
+      if (!this.beam) {
+        this.beam = this.beammanager.addBeam();
+        this.beam.addControlPoint(p.world);
+      } else {
+        const cp = this.beammanager.getControlPointNear(p.world);
+        if (cp) {
+          this.beam.attachStrokes(this.selectionmanager.strokes);
+          this.selectionmanager.reset();
+          this.mode = "edit";
+          this.beam = null;
+        } else {
+          this.beam.addControlPoint(p.world);
+        }
+      }
+    } else {
+      this.dragControlPoint = this.beammanager.getControlPointNear(p.world);
     }
   }
 
@@ -50,9 +64,8 @@ export default class BeamTool implements Tool {
     if (this.dragControlPoint) {
       this.dragControlPoint.x = p.world.x;
       this.dragControlPoint.y = p.world.y;
+      this.beammanager.update();
     }
-
-    this.beammanager.getBeam(0).update();
   }
 
   onMouseMove(_p: MouseData): void {}
@@ -60,6 +73,9 @@ export default class BeamTool implements Tool {
   onMouseUp(_p: MouseData): void {}
 
   onMouseRightClick(p: MouseData): void {
-    this.beammanager.getBeam(0).insertControlPointNear(p.world);
+    const closestBeam = this.beammanager.getBeamNear(p.world);
+    if (closestBeam) {
+      closestBeam.insertControlPointNear(p.world);
+    }
   }
 }

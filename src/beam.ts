@@ -2,6 +2,7 @@ import { Point } from "./geom/point";
 import { Vec } from "./geom/vec";
 import Render, { stroke, fill } from "./render";
 import Stroke from "./stroke";
+import StrokeManager from "./stroke-manager";
 
 import {
   ParametricCurve,
@@ -13,54 +14,41 @@ import {
 } from "./geom/spline";
 
 export default class Beam {
+  strokemanager: StrokeManager;
   controlPoints: Array<Point>;
-  strokes: Array<Stroke>;
+  strokeIds: Array<number>;
   beamCoordinates: Array<Array<BeamCoordinate>> = [];
-  curve: ParametricCurve;
+  curve: ParametricCurve | null;
 
-  constructor(strokes: Array<Stroke>) {
-    // Create four control points for the beam
-    const a = Point.fromStrokePoint(strokes[0].points[0]);
-    const b = Point.fromStrokePoint(
-      strokes[0].getPointAtLength(strokes[0].length * 0.33),
-    );
-    const c = Point.fromStrokePoint(
-      strokes[0].getPointAtLength(strokes[0].length * 0.66),
-    );
-    const d = Point.fromStrokePoint(
-      strokes[0].points[strokes[0].points.length - 1],
-    );
+  constructor(strokemanager: StrokeManager) {
+    this.strokemanager = strokemanager;
 
-    this.controlPoints = [a, b, c, d];
-    this.curve = parametricCatmullRomSpline(this.controlPoints);
+    this.controlPoints = [];
+    this.curve = null;
+    this.strokeIds = [];
+  }
 
-    this.strokes = strokes;
+  addControlPoint(p: Point) {
+    this.controlPoints.push(p);
+    if (this.controlPoints.length > 1) {
+      this.curve = parametricCatmullRomSpline(this.controlPoints);
+    }
+  }
+
+  attachStrokes(strokeIds: Array<number>) {
+    this.strokeIds = strokeIds;
     this.parameterize();
-
-    // Generate beam coordinates  (t, u) for each point on the stroke
-    // t is the distance along the stroke normalized to 0-1
-    // u is the distance perpendicular to the stroke
-
-    // // Create vector for the beam
-    // const beamvec = Vec.sub(this.controlPoints[1], this.controlPoints[0]);
-
-    // for (const point of stroke.points) {
-    //   const p = Point.fromStrokePoint(point);
-    //   const vec = Vec.sub(p, this.controlPoints[0]);
-    //   const t = Vec.dot(vec, beamvec) / Vec.dot(beamvec, beamvec);
-    //   const u = Vec.cross(vec, beamvec) / Vec.len(beamvec);
-    //   this.beamCoordinates.push({ t, u });
-    // }
   }
 
   parameterize() {
     this.beamCoordinates = [];
-    for (const stroke of this.strokes) {
+    for (const strokeId of this.strokeIds) {
+      const stroke = this.strokemanager.getStroke(strokeId);
       const beamCoordinates: Array<BeamCoordinate> = [];
       for (const point of stroke.points) {
-        const t = closestPointOnCurve(this.curve, point);
-        const closest_point = this.curve(t);
-        const tangent = tangentAtPointOnCurve(this.curve, t);
+        const t = closestPointOnCurve(this.curve!, point);
+        const closest_point = this.curve!(t);
+        const tangent = tangentAtPointOnCurve(this.curve!, t);
         const vec_to_point = Vec.sub(point, closest_point);
         const u =
           Math.sign(Vec.cross(vec_to_point, tangent)) *
@@ -72,30 +60,11 @@ export default class Beam {
   }
 
   update() {
-    // Take the beam coordinates and use them to update the stroke points
-
-    // for (let i = 0; i < this.stroke.points.length; i++) {
-    //   const p = this.stroke.points[i];
-    //   const bc = this.beamCoordinates[i];
-    //   const beamvec = Vec.sub(this.controlPoints[1], this.controlPoints[0]);
-    //   const beamvecnorm = Vec.normalize(beamvec);
-    //   const beamvecperp = Vec(beamvecnorm.y, -beamvecnorm.x);
-
-    //   const newpoint = Vec.add(
-    //     this.controlPoints[0],
-    //     Vec.add(Vec.mul(beamvec, bc.t), Vec.mul(beamvecperp, bc.u)),
-    //   );
-    //   p.x = newpoint.x;
-    //   p.y = newpoint.y;
-    // }
-
-    // this.stroke.recomputeLengths();
-
     // Update the curve points
     this.curve = parametricCatmullRomSpline(this.controlPoints);
 
-    for (let i = 0; i < this.strokes.length; i++) {
-      let stroke = this.strokes[i];
+    for (let i = 0; i < this.strokeIds.length; i++) {
+      let stroke = this.strokemanager.getStroke(this.strokeIds[i]);
       for (let j = 0; j < stroke.points.length; j++) {
         const stroke_point = stroke.points[j];
         const bc = this.beamCoordinates[i][j];
@@ -113,19 +82,25 @@ export default class Beam {
   }
 
   insertControlPointNear(p: Point) {
-    const t = closestPointOnCurve(this.curve, p);
+    const t = closestPointOnCurve(this.curve!, p);
     this.controlPoints = insertCatmullRomControlPoint(this.controlPoints, t);
     this.curve = parametricCatmullRomSpline(this.controlPoints);
     this.parameterize();
   }
 
   render(r: Render) {
-    const points = curvePoints(this.curve);
-    r.poly(points, stroke("#FF000010", 2), false);
+    if (this.curve) {
+      r.poly(curvePoints(this.curve), stroke("#FF000010", 2), false);
+    }
 
     for (const pt of this.controlPoints) {
       r.circle(pt.x, pt.y, 5, fill("#FF0000"));
     }
+  }
+
+  getClosestPointOnBeam(p: Point): Point {
+    const t = closestPointOnCurve(this.curve!, p);
+    return this.curve!(t);
   }
 }
 

@@ -1,19 +1,24 @@
 import Render from "./render";
 import Beam from "./beam";
 import { Point } from "./geom/point";
+import StrokeManager from "./stroke-manager";
+import { Vec } from "./geom/vec";
 
 export default class BeamManager {
+  strokemanager: StrokeManager;
   beams: Map<number, Beam> = new Map();
   ids: number = 0;
 
-  constructor() {
+  constructor(strokemanager: StrokeManager) {
+    this.strokemanager = strokemanager;
     this.beams = new Map();
   }
 
-  addBeam(b: Beam): number {
+  addBeam(): Beam {
+    let b = new Beam(this.strokemanager);
     let id = this.ids++;
     this.beams.set(id, b);
-    return id;
+    return b;
   }
 
   removeBeam(id: number) {
@@ -33,6 +38,33 @@ export default class BeamManager {
       }
     }
     return null;
+  }
+
+  updateStrokeIds(mappings: Map<number, Array<number>>) {
+    for (const beam of this.beams.values()) {
+    }
+  }
+
+  update() {
+    for (const beam of this.beams.values()) {
+      beam.update();
+    }
+  }
+
+  getBeamNear(p: Point): Beam | null {
+    let minDist = 10;
+    let minBeam = null;
+
+    for (const beam of this.beams.values()) {
+      const pointOnBeam = beam.getClosestPointOnBeam(p);
+      const dist = Vec.dist(p, pointOnBeam);
+      if (dist < minDist) {
+        minDist = dist;
+        minBeam = beam;
+      }
+    }
+
+    return minBeam;
   }
 
   render(r: Render) {
