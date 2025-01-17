@@ -29,11 +29,13 @@ export default class BeamTool implements Tool {
   }
 
   start() {
-    //get selected strokes
-    const selected = this.selectionmanager.strokes.map((sid) => {
-      return this.strokemanager.getStroke(sid);
-    });
-    this.beammanager.addBeam(new Beam(selected));
+    if (this.selectionmanager.strokes.length > 0) {
+      const selected = this.selectionmanager.strokes.map((sid) => {
+        return this.strokemanager.getStroke(sid);
+      });
+      this.beammanager.addBeam(new Beam(selected));
+    }
+
     this.selectionmanager.reset();
   }
 

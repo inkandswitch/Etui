@@ -1,14 +1,18 @@
 import { StrokePoint } from "./geom/strokepoint";
 import PropertyStack from "./property-stack";
+import QueryManager from "./query-manager";
 import Render, { fill } from "./render";
 import StrokeManager from "./stroke-manager";
+import { Brush, dashed, nameToBrush } from "./brush";
 
 export default class Slicer {
   strokemanager: StrokeManager;
+  querymanager: QueryManager;
   slices: Map<number, Array<StrokeSlice>>;
 
-  constructor(strokemanager: StrokeManager) {
+  constructor(strokemanager: StrokeManager, querymanager: QueryManager) {
     this.strokemanager = strokemanager;
+    this.querymanager = querymanager;
     this.slices = new Map();
   }
 
@@ -17,31 +21,62 @@ export default class Slicer {
     this.slices = new Map();
     let ids = 0;
 
+    const query = this.querymanager.getQuery(0);
     for (const [stroke_id, stroke] of this.strokemanager.strokes) {
-      const half = stroke.length / 2;
+      let color = new PropertyStack([{ type: "value", value: stroke.color }]);
+      let weight = new PropertyStack([{ type: "value", value: stroke.weight }]);
+      let brush = new PropertyStack([
+        { type: "value", value: nameToBrush(stroke.brush) },
+      ]);
+
       const slices: Array<StrokeSlice> = [];
+      let start = 0;
+      let inside = false;
 
+      if (query) {
+        const results = query.queryStroke(stroke);
+        if (results) {
+          inside = results.first;
+
+          for (const intersection of results.intersections) {
+            let n_color = color;
+            let n_brush = brush;
+
+            if (inside) {
+              n_brush = brush.add({ type: "modifier", modify: dashed });
+              n_color = color.add({ type: "value", value: "#AAAAAA" });
+            }
+
+            slices.push({
+              stroke_id,
+              id: ids++,
+              start: start,
+              end: intersection,
+              props: {
+                color: n_color,
+                weight,
+                brush: n_brush,
+              },
+            });
+            start = intersection;
+            inside = !inside;
+          }
+        }
+      }
+
+      if (inside) {
+        brush = brush.add({ type: "modifier", modify: dashed });
+        color = color.add({ type: "value", value: "#AAAAAA" });
+      }
       slices.push({
         stroke_id,
         id: ids++,
-        start: 0,
-        end: half,
-        props: {
-          color: new PropertyStack([stroke.color]),
-          weight: new PropertyStack([stroke.weight]),
-          brush: new PropertyStack([stroke.brush]),
-        },
-      });
-
-      slices.push({
-        stroke_id,
-        id: ids++,
-        start: half,
+        start: start,
         end: stroke.length,
         props: {
-          color: new PropertyStack([stroke.color]),
-          weight: new PropertyStack([stroke.weight]),
-          brush: new PropertyStack([stroke.brush]),
+          color,
+          weight,
+          brush,
         },
       });
 
@@ -81,7 +116,7 @@ export type StrokeSlice = {
 export type Props = {
   color: PropertyStack<string>;
   weight: PropertyStack<number>;
-  brush: PropertyStack<string>;
+  brush: PropertyStack<Brush>;
 };
 
 function getRandomColor(seed: number): string {

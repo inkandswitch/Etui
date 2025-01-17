@@ -1,6 +1,6 @@
 import Slicer from "./slicer";
 import Render, { fill } from "./render";
-import { StrokePoint } from "./geom/strokepoint";
+import { Inklet } from "./brush";
 
 export default class Painter {
   slicer: Slicer;
@@ -21,16 +21,11 @@ export default class Painter {
         const inklets: Array<Inklet> = [];
         const color = slice.props.color.getValue()!;
         const weight = slice.props.weight.getValue()!;
-
-        const brush: any = {
-          pen: penBrush,
-          pencil: pencilBrush,
-          marker: markerBrush,
-          brush: brushBrush,
-        }[slice.props.brush.getValue()!];
+        const brush = slice.props.brush.getValue()!;
 
         for (const point of points) {
-          inklets.push(brush(color, weight, point));
+          let inklet = brush(color, weight, point);
+          if (inklet) inklets.push(inklet);
         }
         this.inklets.set(slice.id, inklets);
       }
@@ -55,76 +50,3 @@ export default class Painter {
     }
   }
 }
-
-export type Inklet = {
-  x: number;
-  y: number;
-  color: string;
-  weight: number;
-  shape: number;
-};
-
-function penBrush(color: string, weight: number, point: StrokePoint): Inklet {
-  return {
-    x: point.x,
-    y: point.y,
-    color: color,
-    weight: weight * 0.5 + weight * 0.5 * point.pressure,
-    shape: 0,
-  };
-}
-
-function pencilBrush(
-  color: string,
-  weight: number,
-  point: StrokePoint,
-): Inklet {
-  return {
-    x: point.x + smoothPseudoRandomFloat(point.distance) * weight - weight * 0.5,
-    y: point.y + smoothPseudoRandomFloat(point.distance) * weight - weight * 0.5,
-    color: color + "30",
-    weight: weight + weight * 0.1 * point.pressure,
-    shape: 0,
-  };
-}
-
-function markerBrush(
-  color: string,
-  weight: number,
-  point: StrokePoint,
-): Inklet {
-  return {
-    x: point.x,
-    y: point.y,
-    color: color + "10",
-    weight: weight * 0.5 + weight * 0.5 * point.pressure,
-    shape: 1,
-  };
-}
-
-function brushBrush(color: string, weight: number, point: StrokePoint): Inklet {
-  return {
-    x:
-      point.x +
-      pseudoRandomFloat(point.distance) * (weight - weight * 0.5) * 0.1,
-    y:
-      point.y +
-      pseudoRandomFloat(point.distance) * (weight - weight * 0.5) * 0.1,
-    color: color,
-    weight: weight * point.pressure,
-    shape: 0,
-  };
-}
-
-function pseudoRandomFloat(seed: number): number {
-  let x = Math.sin(seed) * 10000;
-  return x - Math.floor(x);
-}
-
-function smoothPseudoRandomFloat(seed: number): number {
-  const x = Math.sin(seed) * 10000;
-  const y = Math.sin(seed + 1) * 10000;
-  const z = Math.sin(seed + 2) * 10000;
-  return (x - Math.floor(x) + y - Math.floor(y) + z - Math.floor(z)) / 3;
-}
-

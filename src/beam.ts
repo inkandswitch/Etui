@@ -15,7 +15,7 @@ import {
 export default class Beam {
   controlPoints: Array<Point>;
   strokes: Array<Stroke>;
-  beamCoordinates: Array<Array<BeamCoordinate>>;
+  beamCoordinates: Array<Array<BeamCoordinate>> = [];
   curve: ParametricCurve;
 
   constructor(strokes: Array<Stroke>) {
@@ -33,8 +33,6 @@ export default class Beam {
 
     this.controlPoints = [a, b, c, d];
     this.curve = parametricCatmullRomSpline(this.controlPoints);
-    // const ext_a = Vec.sub(a, Vec.sub(a, b));
-    // const ext_c = Vec.sub(c, Vec.sub(c, b));
 
     this.strokes = strokes;
     this.parameterize();

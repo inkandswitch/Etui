@@ -35,6 +35,7 @@ export default class Stroke {
         data.tiltX,
         data.tiltY,
         distance,
+        this.length,
       ),
     );
   }
@@ -65,6 +66,7 @@ export default class Stroke {
         // Recalculate the distance between points
         this.points[i].distance = Vec.dist(this.points[i - 1], this.points[i]);
         this.length += this.points[i].distance;
+        this.points[i].total_distance = this.length;
       }
     }
   }
