@@ -1,7 +1,6 @@
 import { Point } from "./geom/point";
 import { Vec } from "./geom/vec";
 import Render, { stroke, fill } from "./render";
-import Stroke from "./stroke";
 import StrokeManager from "./stroke-manager";
 
 import {
@@ -88,13 +87,24 @@ export default class Beam {
     this.parameterize();
   }
 
+  updateStrokeIds(mappings: Map<number, Array<number>>) {
+    for (let i = 0; i < this.strokeIds.length; i++) {
+      const newIds = mappings.get(this.strokeIds[i]);
+      if (newIds) {
+        this.strokeIds.splice(i, 1, ...newIds);
+      }
+    }
+    this.parameterize();
+  }
+
   render(r: Render) {
     if (this.curve) {
-      r.poly(curvePoints(this.curve), stroke("#FF000010", 2), false);
+      r.poly(curvePoints(this.curve), stroke("#0000FF30", 4), false);
+      r.poly(curvePoints(this.curve), stroke("#FFFFFF90", 2), false);
     }
 
     for (const pt of this.controlPoints) {
-      r.circle(pt.x, pt.y, 5, fill("#FF0000"));
+      r.circle(pt.x, pt.y, 3, fill("#0000FF"));
     }
   }
 

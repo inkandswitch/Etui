@@ -110,18 +110,18 @@ export default class SelectionManager {
         // If the stroke is inside, add the left stroke
         if (i % 2 == inside) {
           this.strokes.push(leftId);
-          newStrokes.push(leftId);
         }
+        newStrokes.push(leftId);
       }
 
       // Add the last stroke
       const strokeId = this.strokemanager.addStroke(stroke);
       if (offsets.length % 2 == inside) {
-        newStrokes.push(strokeId);
+        this.strokes.push(strokeId);
       }
+      newStrokes.push(strokeId);
 
       strokeIdMappings.set(stroke_id, newStrokes);
-      this.strokes.push(...newStrokes);
     }
 
     // Notify beams of updated ids

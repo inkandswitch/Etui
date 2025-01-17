@@ -42,6 +42,7 @@ export default class BeamManager {
 
   updateStrokeIds(mappings: Map<number, Array<number>>) {
     for (const beam of this.beams.values()) {
+      beam.updateStrokeIds(mappings);
     }
   }
 
