@@ -42,9 +42,13 @@ function pencilBrush(
 ): Inklet {
   return {
     x:
-      point.x + smoothPseudoRandomFloat(point.distance) * weight - weight * 0.5,
+      point.x +
+      smoothPseudoRandomFloat(point.total_distance) * weight -
+      weight * 0.5,
     y:
-      point.y + smoothPseudoRandomFloat(point.distance) * weight - weight * 0.5,
+      point.y +
+      smoothPseudoRandomFloat(point.total_distance) * weight -
+      weight * 0.5,
     color: color + "30",
     weight: weight + weight * 0.1 * point.pressure,
     shape: 0,
@@ -71,12 +75,14 @@ function brushBrush(color: string, weight: number, point: StrokePoint): Inklet {
   return {
     x:
       point.x +
-      pseudoRandomFloat(point.distance) * (weight - weight * 0.5) * 0.1,
+      pseudoRandomFloat(point.total_distance) * (weight - weight * 0.5) * 0.1,
     y:
       point.y +
-      pseudoRandomFloat(point.distance) * (weight - weight * 0.5) * 0.1,
+      pseudoRandomFloat(point.total_distance) * (weight - weight * 0.5) * 0.1,
     color: color,
-    weight: weight * point.pressure,
+    weight:
+      weight * point.pressure +
+      smoothPseudoRandomFloat(point.total_distance) * weight,
     shape: 0,
     distance: point.total_distance,
   };
