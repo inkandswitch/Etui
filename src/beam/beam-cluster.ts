@@ -200,7 +200,7 @@ export default class BeamCluster {
       });
 
       for (const polygon of mappedPolygons) {
-        r.poly(polygon, stroke("#FF000033", 2));
+        r.poly(polygon, stroke("#FF000022", 2));
       }
     }
   }

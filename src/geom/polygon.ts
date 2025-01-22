@@ -132,19 +132,22 @@ Polygon.decompose = (polygon: CCWPolygon): Polygon[] => {
   const reflexVertices = Polygon.getReflexVertices(polygon);
 
   // If polygon is already convex, return it as is
-  if (reflexVertices.length == 0) {
+  if (reflexVertices.length === 0) {
     return [polygon];
   }
+
+  // Track the best split we've found
+  let bestSplit: { poly1: Polygon; poly2: Polygon } | null = null;
+  let bestScore = Infinity;
 
   // Try to split from each reflex vertex
   for (const i of reflexVertices) {
     // Try to connect to every other vertex
     for (let j = 0; j < n; j++) {
-      if (Math.abs(i - j) <= 1 || Math.abs(i - j) === n - 1) continue; // Skip adjacent vertices
+      if (Math.abs(i - j) <= 1 || Math.abs(i - j) === n - 1) continue;
 
-      // Check if diagonal is valid (lies inside polygon and doesn't intersect edges)
       if (Polygon.isDiagonalValid(polygon, i, j)) {
-        // Split polygon into two parts along the diagonal
+        // Build potential sub-polygons
         const poly1: Polygon = [];
         const poly2: Polygon = [];
 
@@ -164,17 +167,25 @@ Polygon.decompose = (polygon: CCWPolygon): Polygon[] => {
         }
         poly2.push(polygon[i]);
 
-        // Recursively decompose the sub-polygons
-        return [
-          ...Polygon.decompose(poly1 as CCWPolygon),
-          ...Polygon.decompose(poly2 as CCWPolygon),
-        ];
+        // Score this split based on how balanced the sub-polygons are
+        const score = Math.abs(poly1.length - poly2.length);
+        if (score < bestScore) {
+          bestScore = score;
+          bestSplit = { poly1, poly2 };
+        }
       }
     }
   }
 
+  // If we found a valid split, use it
+  if (bestSplit) {
+    return [
+      ...Polygon.decompose(bestSplit.poly1 as CCWPolygon),
+      ...Polygon.decompose(bestSplit.poly2 as CCWPolygon),
+    ];
+  }
+
   // If we can't find a valid diagonal, return the polygon as is
-  // (this shouldn't happen for simple polygons)
   return [polygon];
 };
 
