@@ -5,9 +5,9 @@ export default class Render {
   ctx: CanvasRenderingContext2D;
   pattern: CanvasPattern | null = null;
 
-  constructor() {
-    this.canvas = document.createElement("canvas");
-    document.body.appendChild(this.canvas);
+  constructor(canvas: HTMLCanvasElement) {
+    this.canvas = canvas;
+    
     this.ctx = this.canvas.getContext("2d")!;
     // scale the canvas to the device pixel ratio
     const dpr = window.devicePixelRatio || 1;

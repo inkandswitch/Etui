@@ -1,9 +1,6 @@
-import tick from "./lib/tick";
 import Render from "./render";
 import Input from "./input";
-
 import Camera from "./camera";
-
 import StrokeManager from "./stroke-manager";
 import Slicer from "./slicer";
 import Painter from "./painter";
@@ -21,84 +18,125 @@ import DrawTool from "./tools/drawtool";
 import SelectTool from "./tools/selecttool";
 import BeamTool from "./tools/beamtool";
 import QueryTool from "./tools/querytool";
+import type { Doc } from "./datatype";
+import type Stroke from "./stroke";
 
-const render = new Render();
-const camera = new Camera();
+export interface EtuiInstance {
+  onStrokeComplete?: (stroke: Stroke) => void;
+  onCameraChange?: (camera: Doc["camera"]) => void;
+  addStroke: (stroke: Stroke) => void;
+  setCamera: (camera: Doc["camera"]) => void;
+  cleanup: () => void;
+}
 
-// managers
-const strokemanager = new StrokeManager();
-const beammanager = new BeamManager(strokemanager);
-const selectionmanager = new SelectionManager(strokemanager, beammanager);
-const querymanager = new QueryManager();
+export function setupEtui(canvas: HTMLCanvasElement): EtuiInstance {
+  // Initialize render with canvas
+  const render = new Render(canvas);
+  const camera = new Camera();
+  
+  // managers
+  const strokemanager = new StrokeManager();
+  const beammanager = new BeamManager(strokemanager);
+  const selectionmanager = new SelectionManager(strokemanager, beammanager);
+  const querymanager = new QueryManager();
 
-// Pipeline
-const slicer = new Slicer(strokemanager, querymanager);
-const painter = new Painter(slicer);
+  // Pipeline
+  const slicer = new Slicer(strokemanager, querymanager);
+  const painter = new Painter(slicer);
 
-// Register tools
-const toolmanager = new ToolManager();
-const drawtool = new DrawTool(strokemanager);
-toolmanager.register("draw", drawtool);
-const selecttool = new SelectTool(selectionmanager);
-toolmanager.register("select", selecttool);
-const beamtool = new BeamTool(beammanager, selectionmanager, strokemanager);
-toolmanager.register("beam", beamtool);
-const querytool = new QueryTool(querymanager);
-toolmanager.register("query", querytool);
+  // Register tools
+  const toolmanager = new ToolManager();
+  const drawtool = new DrawTool(strokemanager);
+  toolmanager.register("draw", drawtool);
+  const selecttool = new SelectTool(selectionmanager);
+  toolmanager.register("select", selecttool);
+  const beamtool = new BeamTool(beammanager, selectionmanager, strokemanager);
+  toolmanager.register("beam", beamtool);
+  const querytool = new QueryTool(querymanager);
+  toolmanager.register("query", querytool);
 
-// Create panels
-new ToolPanel(toolmanager);
-new PropertyPanel(drawtool);
-new SelectionPanel(selecttool);
+  // Create panels
+  new ToolPanel(toolmanager);
+  new PropertyPanel(drawtool);
+  new SelectionPanel(selecttool);
 
-// Handle input
-new Input(camera, toolmanager);
+  // Handle input
+  new Input(camera, toolmanager);
 
-// // Example
-// const s = new Stroke("red", 1);
-// s.addPoint({
-//   pressure: 1,
-//   tiltX: 0,
-//   tiltY: 0,
-//   world: { x: 0, y: 0 },
-//   delta: { x: 0, y: 0 },
-// });
+  // // Example
+  // const s = new Stroke("red", 1);
+  // s.addPoint({
+  //   pressure: 1,
+  //   tiltX: 0,
+  //   tiltY: 0,
+  //   world: { x: 0, y: 0 },
+  //   delta: { x: 0, y: 0 },
+  // });
 
-// s.addPoint({
-//   pressure: 1,
-//   tiltX: 0,
-//   tiltY: 0,
-//   world: { x: 100, y: 100 },
-//   delta: { x: 100, y: 100 },
-// });
+  // s.addPoint({
+  //   pressure: 1,
+  //   tiltX: 0,
+  //   tiltY: 0,
+  //   world: { x: 100, y: 100 },
+  //   delta: { x: 100, y: 100 },
+  // });
 
-// s.addPoint({
-//   pressure: 1,
-//   tiltX: 0,
-//   tiltY: 0,
-//   world: { x: 200, y: 100 },
-//   delta: { x: 100, y: 0 },
-// });
+  // s.addPoint({
+  //   pressure: 1,
+  //   tiltX: 0,
+  //   tiltY: 0,
+  //   world: { x: 200, y: 100 },
+  //   delta: { x: 100, y: 0 },
+  // });
 
-// strokemanager.addStroke(s);
+  // strokemanager.addStroke(s);
 
-tick((dt: number) => {
-  render.clear();
-  render.beginOffset(camera);
+  let stopTickCallback: (() => void) | undefined;
 
-  slicer.update();
-  painter.update();
-  painter.render(render);
+  // Set up render loop
+  const startTick = () => {
+    let running = true;
+    const tickFn = (dt: number) => {
+      if (!running) return;
+      render.clear();
+      render.beginOffset(camera);
 
-  //strokemanager.render(render);
+      slicer.update();
+      painter.update();
+      painter.render(render);
 
-  selectionmanager.render(render);
+      // strokemanager.render(render);
 
-  if (beamtool.active) {
-    beammanager.render(render);
-  }
+      selectionmanager.render(render);
 
-  querymanager.render(render);
+      if (beamtool.active) {
+        beammanager.render(render);
+      }
 
-  render.endOffset();
-});
+      querymanager.render(render);
+
+      render.endOffset();
+      requestAnimationFrame(() => tickFn(performance.now()));
+    };
+    tickFn(performance.now());
+    return () => {
+      running = false;
+    };
+  };
+
+  stopTickCallback = startTick();
+
+  return {
+    onStrokeComplete: undefined,
+    onCameraChange: undefined,
+    addStroke: (stroke: Stroke) => {
+      strokemanager.addStroke(stroke);
+    },
+    setCamera: (cameraState) => {
+      Object.assign(camera, cameraState);
+    },
+    cleanup: () => {
+      stopTickCallback?.();
+    },
+  };
+}
