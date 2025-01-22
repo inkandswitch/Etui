@@ -15,9 +15,9 @@ function toInputEvent(e: PointerEvent | MouseEvent, camera: Camera): MouseData {
   return {
     world: camera.screenToWorld({ x: e.clientX, y: e.clientY }),
     delta: Vec(e.movementX, e.movementY),
-    pressure: 'pressure' in e ? e.pressure : 1,
-    tiltX: 'tiltX' in e ? e.tiltX : 0,
-    tiltY: 'tiltY' in e ? e.tiltY : 0,
+    pressure: "pressure" in e ? e.pressure : 1,
+    tiltX: "tiltX" in e ? e.tiltX : 0,
+    tiltY: "tiltY" in e ? e.tiltY : 0,
   };
 }
 
@@ -72,6 +72,10 @@ export default class Input {
       },
       { passive: false },
     );
+
+    window.addEventListener("keydown", (e) => {
+      this.onKeyDown(e.key);
+    });
   }
 
   onZoom(delta: number, p: Point) {
@@ -100,5 +104,9 @@ export default class Input {
 
   onMouseRightClick(p: MouseData) {
     this.toolmanager.onMouseRightClick(p);
+  }
+
+  onKeyDown(key: string) {
+    this.toolmanager.onKeyDown(key);
   }
 }

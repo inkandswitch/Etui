@@ -18,7 +18,7 @@ export default class DrawTool implements Tool {
   constructor(strokemanager: StrokeManager) {
     this.strokemanager = strokemanager;
     this.color = "#000000";
-    this.brush = "pen";
+    this.brush = "brush";
     this.weight = 1;
   }
 

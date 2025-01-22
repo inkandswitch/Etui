@@ -9,7 +9,7 @@ import Slicer from "./slicer";
 import Painter from "./painter";
 
 import SelectionManager from "./selection-manager";
-import BeamManager from "./beam-manager";
+import BeamManager from "./beam/beam-manager";
 import QueryManager from "./query-manager";
 
 import PropertyPanel from "./panels/property-panel";
@@ -53,34 +53,6 @@ new SelectionPanel(selecttool);
 
 // Handle input
 new Input(camera, toolmanager);
-
-// // Example
-// const s = new Stroke("red", 1);
-// s.addPoint({
-//   pressure: 1,
-//   tiltX: 0,
-//   tiltY: 0,
-//   world: { x: 0, y: 0 },
-//   delta: { x: 0, y: 0 },
-// });
-
-// s.addPoint({
-//   pressure: 1,
-//   tiltX: 0,
-//   tiltY: 0,
-//   world: { x: 100, y: 100 },
-//   delta: { x: 100, y: 100 },
-// });
-
-// s.addPoint({
-//   pressure: 1,
-//   tiltX: 0,
-//   tiltY: 0,
-//   world: { x: 200, y: 100 },
-//   delta: { x: 100, y: 0 },
-// });
-
-// strokemanager.addStroke(s);
 
 tick((dt: number) => {
   render.clear();

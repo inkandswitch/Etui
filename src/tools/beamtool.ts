@@ -1,13 +1,15 @@
 import { MouseData } from "../input";
 import { Tool } from "../tool-manager";
 
-import BeamManager from "../beam-manager";
-import Beam from "../beam";
+import BeamManager from "../beam/beam-manager";
+import Beam from "../beam/beam";
+import BeamCluster from "../beam/beam-cluster";
 
 import SelectionManager from "../selection-manager";
 import StrokeManager from "../stroke-manager";
 
 import { Point } from "../geom/point";
+import ControlPoint from "../beam/control-point";
 
 export default class BeamTool implements Tool {
   beammanager: BeamManager;
@@ -16,10 +18,10 @@ export default class BeamTool implements Tool {
 
   active: boolean = false;
 
-  beam: Beam | null = null;
+  cluster: BeamCluster | null = null;
   mode: "create" | "edit" = "edit";
 
-  dragControlPoint: Point | null = null;
+  dragControlPoint: ControlPoint | null = null;
 
   constructor(
     beammanager: BeamManager,
@@ -32,50 +34,65 @@ export default class BeamTool implements Tool {
   }
 
   start() {
-    if (this.selectionmanager.strokes.length > 0) {
-      this.mode = "create";
-    } else {
-      this.mode = "edit";
-    }
+    this.mode = "create";
+    // if (this.selectionmanager.strokes.length > 0) {
+    //   this.mode = "create";
+    // } else {
+    //   this.mode = "edit";
+    // }
   }
 
   onMouseDown(p: MouseData): void {
     if (this.mode == "create") {
-      if (!this.beam) {
-        this.beam = this.beammanager.addBeam();
-        this.beam.addControlPoint(p.world);
+      if (!this.cluster) {
+        this.cluster = this.beammanager.addCluster();
+        let a = new ControlPoint(p.world);
+        let b = new ControlPoint(p.world);
+        this.cluster.addBeam(new Beam([a, b]));
+        this.dragControlPoint = b;
       } else {
-        const cp = this.beammanager.getControlPointNear(p.world);
-        if (cp) {
-          this.beam.attachStrokes(this.selectionmanager.strokes);
-          this.selectionmanager.reset();
-          this.mode = "edit";
-          this.beam = null;
-        } else {
-          this.beam.addControlPoint(p.world);
+        let a = this.cluster.getControlPointNear(p.world);
+        if (!a) {
+          a = new ControlPoint(p.world);
         }
+        let b = new ControlPoint(p.world);
+        this.cluster.addBeam(new Beam([a, b]));
+        this.dragControlPoint = b;
       }
     } else {
-      this.dragControlPoint = this.beammanager.getControlPointNear(p.world);
+      this.dragControlPoint = this.cluster!.getControlPointNear(p.world);
     }
   }
 
   onMouseDrag(p: MouseData): void {
     if (this.dragControlPoint) {
-      this.dragControlPoint.x = p.world.x;
-      this.dragControlPoint.y = p.world.y;
-      this.beammanager.update();
+      this.dragControlPoint.move(p.world);
+      this.cluster?.update(Array.from(this.strokemanager.strokes.values()));
     }
   }
 
   onMouseMove(_p: MouseData): void {}
 
-  onMouseUp(_p: MouseData): void {}
+  onMouseUp(_p: MouseData): void {
+    if (this.cluster && this.dragControlPoint) {
+      this.cluster.mergeControlPoint(this.dragControlPoint);
+      this.dragControlPoint = null;
+    }
+  }
 
   onMouseRightClick(p: MouseData): void {
-    const closestBeam = this.beammanager.getBeamNear(p.world);
-    if (closestBeam) {
-      closestBeam.insertControlPointNear(p.world);
+    // const closestBeam = this.beammanager.getBeamNear(p.world);
+    // if (closestBeam) {
+    //   closestBeam.insertControlPointNear(p.world);
+    // }
+  }
+
+  onKeyDown(key: string): void {
+    if (key == "Enter") {
+      this.cluster?.bindStrokes(
+        Array.from(this.strokemanager.strokes.values()),
+      );
+      this.mode = "edit";
     }
   }
 }

@@ -9,6 +9,7 @@ export interface Tool {
   onMouseDrag(p: MouseData): void;
   onMouseUp(p: MouseData): void;
   onMouseRightClick(p: MouseData): void;
+  onKeyDown(key: string): void;
 }
 
 export default class ToolManager {
@@ -52,5 +53,9 @@ export default class ToolManager {
 
   onMouseRightClick(p: MouseData) {
     this.tools.get(this.currentTool)!.onMouseRightClick(p);
+  }
+
+  onKeyDown(key: string) {
+    this.tools.get(this.currentTool)!.onKeyDown(key);
   }
 }
