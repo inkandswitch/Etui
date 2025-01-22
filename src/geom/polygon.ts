@@ -1,6 +1,6 @@
 import { Point } from "./point";
 
-type Polygon = Array<Point>;
+export type Polygon = Array<Point>;
 
 export function Polygon(points: Array<Point>): Polygon {
   return points;
@@ -30,9 +30,12 @@ Polygon.isPointInside = (polygon: Polygon, point: Point): boolean => {
   return inside;
 };
 
-export type WachspressCoords = number[]
+export type WachspressCoords = number[];
 
-Polygon.WachspressCoords = (polygon: Polygon, point: Point): WachspressCoords => {
+Polygon.wachspressCoords = (
+  polygon: Polygon,
+  point: Point,
+): WachspressCoords => {
   const n = polygon.length;
   const weights: number[] = new Array(n);
   let weightSum = 0;
@@ -43,28 +46,34 @@ Polygon.WachspressCoords = (polygon: Polygon, point: Point): WachspressCoords =>
     const curr = polygon[i];
     const next = polygon[(i + 1) % n];
 
+    const A = signedTriangleArea(prev, curr, next);
     const A_i = signedTriangleArea(point, prev, curr);
     const A_i1 = signedTriangleArea(point, curr, next);
-    
+
     // Compute weight for current vertex
-    const weight = A_i * A_i1;
+    const weight = A/(A_i * A_i1);
     weights[i] = weight;
     weightSum += weight;
   }
 
   // Normalize weights to get coordinates that sum to 1
-  return weights.map(w => w / weightSum);
+  return weights.map((w) => w / weightSum);
 };
 
-Polygon.pointFromWachspressCoords = (polygon: Polygon, coords: WachspressCoords): Point => {
+Polygon.pointFromWachspressCoords = (
+  polygon: Polygon,
+  coords: WachspressCoords,
+): Point => {
   if (polygon.length !== coords.length) {
-    throw new Error('Number of coordinates must match number of polygon vertices');
+    throw new Error(
+      "Number of coordinates must match number of polygon vertices",
+    );
   }
 
   // Check if coordinates sum to approximately 1
   const sum = coords.reduce((a, b) => a + b, 0);
   if (Math.abs(sum - 1) > 1e-10) {
-    throw new Error('Wachspress coordinates must sum to 1');
+    throw new Error("Wachspress coordinates must sum to 1");
   }
 
   // Compute weighted sum of vertices

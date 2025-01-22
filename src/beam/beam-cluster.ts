@@ -1,4 +1,5 @@
 import { Point } from "../geom/point";
+import { Polygon, WachspressCoords } from "../geom/polygon";
 import { Vec } from "../geom/vec";
 import Render, { fill } from "../render";
 import Stroke from "../stroke";
@@ -9,12 +10,14 @@ import ControlPoint from "./control-point";
 export default class BeamCluster {
   beams: Array<Beam>;
   controlPoints: Set<ControlPoint>;
-  beamCoordinates: Array<Array<Array<BeamCoordinate>>>; // Stroke -> Point -> Beam -> BeamCoordinates
+  //beamCoordinates: Array<Array<Array<BeamCoordinate>>>; // Stroke -> Point -> Beam -> BeamCoordinates
+  wpCoordinates: Array<Array<WachspressCoords>>; // Stroke -> Point -> WachspressCoords
 
   constructor() {
     this.beams = [];
     this.controlPoints = new Set();
-    this.beamCoordinates = [];
+    //this.beamCoordinates = [];
+    this.wpCoordinates = [];
   }
 
   addBeam(beam: Beam) {
@@ -46,50 +49,63 @@ export default class BeamCluster {
     }
   }
 
+  getPolygonPoints(): Polygon {
+    if (this.beams.length === 0) return [];
+
+    const points: Point[] = [];
+    const visited = new Set<Beam>();
+    let currentBeam = this.beams[0];
+    let lastPoint = currentBeam.controlPoints[0];
+
+    // Walk through connected beams to form polygon
+    while (currentBeam && !visited.has(currentBeam)) {
+      visited.add(currentBeam);
+      points.push(lastPoint.point);
+
+      // Get the other control point of current beam
+      const endPoint =
+        currentBeam.controlPoints[0] === lastPoint
+          ? currentBeam.controlPoints[1]
+          : currentBeam.controlPoints[0];
+
+      // Find next beam that shares this control point
+      currentBeam = this.beams.find(
+        (beam) => !visited.has(beam) && beam.controlPoints.includes(endPoint),
+      )!;
+
+      lastPoint = endPoint;
+    }
+
+    return points;
+  }
+
   bindStrokes(strokes: Array<Stroke>) {
-    this.beamCoordinates = [];
+    this.wpCoordinates = [];
+
+    // Const beam polygon
+    const polygon = Polygon.ensureCounterclockwise(this.getPolygonPoints());
+
     for (const stroke of strokes) {
-      let strokeCoordinates: Array<Array<BeamCoordinate>> = [];
+      let strokeCoordinates: Array<WachspressCoords> = [];
       for (const point of stroke.points) {
-        let pointCoordinates: Array<BeamCoordinate> = [];
-        for (const beam of this.beams) {
-          const bcoord = beam.getBeamCoordinatesForPoint(point);
-          pointCoordinates.push(bcoord);
-        }
-        strokeCoordinates.push(pointCoordinates);
+        const coords = Polygon.wachspressCoords(polygon, point);
+        strokeCoordinates.push(coords);
       }
-      this.beamCoordinates.push(strokeCoordinates);
+      this.wpCoordinates.push(strokeCoordinates);
     }
   }
 
   update(strokes: Array<Stroke>) {
-    if (this.beamCoordinates.length == 0) return;
+    if (this.wpCoordinates.length == 0) return;
+
+    const polygon = Polygon.ensureCounterclockwise(this.getPolygonPoints());
 
     for (const [s, stroke] of strokes.entries()) {
       for (const [p, point] of stroke.points.entries()) {
-        const newPos = { x: 0, y: 0 };
-        let totalWeight = 0;
-
-        for (const [b, beam] of this.beams.entries()) {
-          const bcoord = this.beamCoordinates[s][p][b];
-          if (bcoord.t < 0 || bcoord.t > 1) {
-            continue;
-          }
-
-          const weight = 1 / (1 + Math.abs(bcoord.u)); // Falloff function: higher weight when u is closer to 0
-          const np = beam.getPointForBeamCoordinates(bcoord);
-
-          newPos.x += np.x * weight;
-          newPos.y += np.y * weight;
-          totalWeight += weight;
-        }
-
-        if (totalWeight > 0) {
-          newPos.x /= totalWeight;
-          newPos.y /= totalWeight;
-          point.x = newPos.x;
-          point.y = newPos.y;
-        }
+        const wpCoords = this.wpCoordinates[s][p];
+        const newPoint = Polygon.pointFromWachspressCoords(polygon, wpCoords);
+        point.x = newPoint.x;
+        point.y = newPoint.y;
       }
       stroke.recomputeLengths();
     }
