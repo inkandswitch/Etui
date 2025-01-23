@@ -1,5 +1,5 @@
 import Slicer from "./slicer";
-import Render, { fill } from "./render";
+import Render, { fill } from "../../render";
 import { Inklet } from "./brush";
 
 export default class Painter {

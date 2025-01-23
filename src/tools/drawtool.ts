@@ -1,7 +1,7 @@
 import { MouseData } from "../input";
-import Stroke from "../stroke";
-import StrokeManager from "../stroke-manager";
-import { Tool } from "../tool-manager";
+import Stroke from "../materials/ink/stroke";
+import StrokeManager from "../materials/ink/stroke-manager";
+import { Tool } from "./tool-manager";
 
 export default class DrawTool implements Tool {
   strokemanager: StrokeManager;
@@ -44,4 +44,6 @@ export default class DrawTool implements Tool {
   }
 
   onMouseRightClick(p: MouseData): void {}
+
+  onKeyDown(key: string): void {}
 }

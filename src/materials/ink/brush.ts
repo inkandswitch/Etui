@@ -1,4 +1,4 @@
-import { StrokePoint } from "./geom/strokepoint";
+import { StrokePoint } from "../../geom/strokepoint";
 
 export type Inklet = {
   x: number;

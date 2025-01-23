@@ -1,9 +1,9 @@
-import { Point } from "../geom/point";
-import { Polygon, CCWPolygon, WachspressCoords } from "../geom/polygon";
-import { BarycentricCoords, Triangle } from "../geom/triangle";
-import { Vec } from "../geom/vec";
-import Render, { fill, stroke } from "../render";
-import Stroke from "../stroke";
+import { Point } from "../../geom/point";
+import { Polygon, CCWPolygon, WachspressCoords } from "../../geom/polygon";
+import { BarycentricCoords, Triangle } from "../../geom/triangle";
+import { Vec } from "../../geom/vec";
+import Render, { fill, stroke } from "../../render";
+import Stroke from "../ink/stroke";
 
 import Beam, { BeamCoordinate } from "./beam";
 import ControlPoint from "./control-point";

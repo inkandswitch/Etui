@@ -1,4 +1,4 @@
-import Render from "./render";
+import Render from "../../render";
 import Stroke from "./stroke";
 
 export default class StrokeManager {

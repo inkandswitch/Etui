@@ -4,7 +4,7 @@ import { Line } from "./geom/line";
 import Render, { fill, fillAndStroke } from "./render";
 import StrokeManager from "./stroke-manager";
 import { Polygon } from "./geom/polygon";
-import BeamManager from "./beam-manager";
+import BeamManager from "./beam/beam-manager";
 
 export default class SelectionManager {
   strokemanager: StrokeManager;

@@ -1,7 +1,6 @@
 import { MouseData } from "../input";
-import Stroke from "../stroke";
 import QueryManager from "../query-manager";
-import { Tool } from "../tool-manager";
+import { Tool } from "./tool-manager";
 import Query from "../query";
 
 export default class QueryTool implements Tool {
@@ -32,4 +31,6 @@ export default class QueryTool implements Tool {
   onMouseUp(_p: MouseData): void {}
 
   onMouseRightClick(p: MouseData): void {}
+
+  onKeyDown(key: string): void {}
 }

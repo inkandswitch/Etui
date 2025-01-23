@@ -1,7 +1,7 @@
-import { Point } from "../geom/point";
-import { Vec } from "../geom/vec";
-import Render, { stroke, fill } from "../render";
-import StrokeManager from "../stroke-manager";
+import { Point } from "../../geom/point";
+import { Vec } from "../../geom/vec";
+import Render, { stroke, fill } from "../../render";
+import StrokeManager from "../ink/stroke-manager";
 
 import {
   ParametricCurve,

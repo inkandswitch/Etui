@@ -1,8 +1,8 @@
-import Render from "../render";
+import Render from "../../render";
 import Beam from "./beam";
-import { Point } from "../geom/point";
-import StrokeManager from "../stroke-manager";
-import { Vec } from "../geom/vec";
+import { Point } from "../../geom/point";
+import StrokeManager from "../ink/stroke-manager";
+import { Vec } from "../../geom/vec";
 import BeamCluster from "./beam-cluster";
 
 export default class BeamManager {

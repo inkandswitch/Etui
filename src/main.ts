@@ -4,19 +4,19 @@ import Input from "./input";
 
 import Camera from "./camera";
 
-import StrokeManager from "./stroke-manager";
-import Slicer from "./slicer";
-import Painter from "./painter";
+import StrokeManager from "./materials/ink/stroke-manager";
+import Slicer from "./materials/ink/slicer";
+import Painter from "./materials/ink/painter";
 
 import SelectionManager from "./selection-manager";
-import BeamManager from "./beam/beam-manager";
+import BeamManager from "./materials/beam/beam-manager";
 import QueryManager from "./query-manager";
 
 import PropertyPanel from "./panels/property-panel";
 import ToolPanel from "./panels/tool-panel";
 import SelectionPanel from "./panels/selection-panel";
 
-import ToolManager from "./tool-manager";
+import ToolManager from "./tools/tool-manager";
 import DrawTool from "./tools/drawtool";
 import SelectTool from "./tools/selecttool";
 import BeamTool from "./tools/beamtool";

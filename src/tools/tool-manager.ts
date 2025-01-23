@@ -1,4 +1,4 @@
-import { MouseData } from "./input";
+import { MouseData } from "../input";
 
 export interface Tool {
   start(): void;

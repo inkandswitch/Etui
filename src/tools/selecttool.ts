@@ -1,7 +1,7 @@
 import m from "mithril";
 
 import { MouseData } from "../input";
-import { Tool } from "../tool-manager";
+import { Tool } from "./tool-manager";
 import SelectionManager from "../selection-manager";
 
 export default class SelectTool implements Tool {
@@ -59,6 +59,8 @@ export default class SelectTool implements Tool {
   }
 
   onMouseRightClick(p: MouseData): void {}
+
+  onKeyDown(key: string): void {}
 
   cutIfNeeded() {
     if (!this.moved) {

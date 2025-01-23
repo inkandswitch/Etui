@@ -1,15 +1,14 @@
 import { MouseData } from "../input";
-import { Tool } from "../tool-manager";
+import { Tool } from "./tool-manager";
 
-import BeamManager from "../beam/beam-manager";
-import Beam from "../beam/beam";
-import BeamCluster from "../beam/beam-cluster";
+import BeamManager from "../materials/beam/beam-manager";
+import Beam from "../materials/beam/beam";
+import BeamCluster from "../materials/beam/beam-cluster";
 
 import SelectionManager from "../selection-manager";
-import StrokeManager from "../stroke-manager";
+import StrokeManager from "../materials/ink/stroke-manager";
 
-import { Point } from "../geom/point";
-import ControlPoint from "../beam/control-point";
+import ControlPoint from "../materials/beam/control-point";
 
 export default class BeamTool implements Tool {
   beammanager: BeamManager;
