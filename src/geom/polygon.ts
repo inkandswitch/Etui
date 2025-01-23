@@ -1,5 +1,6 @@
 import { Point } from "./point";
 import { Line } from "./line";
+import { Triangle } from "./triangle";
 
 export type Polygon = Array<Point>;
 export type CCWPolygon = Array<Point> & { readonly __brand: unique symbol };
@@ -47,9 +48,9 @@ Polygon.wachspressCoords = (
     const curr = polygon[i];
     const next = polygon[(i + 1) % n];
 
-    const A = signedTriangleArea(prev, curr, next);
-    const A_i = signedTriangleArea(point, prev, curr);
-    const A_i1 = signedTriangleArea(point, curr, next);
+    const A = Triangle.signedTriangleArea(prev, curr, next);
+    const A_i = Triangle.signedTriangleArea(point, prev, curr);
+    const A_i1 = Triangle.signedTriangleArea(point, curr, next);
 
     // Compute weight for current vertex
     const weight = A / (A_i * A_i1);
@@ -114,17 +115,12 @@ Polygon.getReflexVertices = (polygon: CCWPolygon): number[] => {
     const next = polygon[(i + 1) % n];
 
     // If the signed area is positive, the angle is reflex (> 180 degrees)
-    if (signedTriangleArea(prev, curr, next) > 0) {
+    if (Triangle.signedTriangleArea(prev, curr, next) > 0) {
       reflexVertices.push(i);
     }
   }
 
   return reflexVertices;
-};
-
-// Helper function to compute the signed area of a triangle
-const signedTriangleArea = (a: Point, b: Point, c: Point): number => {
-  return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
 };
 
 Polygon.decompose = (polygon: CCWPolygon): Polygon[] => {
@@ -225,4 +221,73 @@ Polygon.isDiagonalValid = (polygon: Polygon, i: number, j: number): boolean => {
   }
 
   return true;
+};
+
+Polygon.getAllTriangles = (polygon: Polygon): Triangle[] => {
+  const n = polygon.length;
+  if (n < 3) return [];
+
+  const triangles: Triangle[] = [];
+
+  // Try all possible combinations of three vertices
+  for (let i = 0; i < n - 2; i++) {
+    for (let j = i + 1; j < n - 1; j++) {
+      for (let k = j + 1; k < n; k++) {
+        // Check if this forms a valid interior triangle
+        if (isTriangleValid(polygon, i, j, k)) {
+          triangles.push(Triangle(polygon[i], polygon[j], polygon[k]));
+        }
+      }
+    }
+  }
+
+  return triangles;
+};
+
+/**
+ * Helper function to check if a triangle formed by three vertex indices is valid
+ */
+const isTriangleValid = (
+  polygon: Polygon,
+  i: number,
+  j: number,
+  k: number,
+): boolean => {
+  // Get the triangle vertices
+  const a = polygon[i];
+  const b = polygon[j];
+  const c = polygon[k];
+
+  // Check if all three edges of the triangle are valid diagonals
+  // (or polygon edges)
+  if (!isEdgeValid(polygon, i, j) || 
+      !isEdgeValid(polygon, j, k) || 
+      !isEdgeValid(polygon, k, i)) {
+    return false;
+  }
+
+  // Compute the centroid of the triangle
+  const centroid = {
+    x: (a.x + b.x + c.x) / 3,
+    y: (a.y + b.y + c.y) / 3,
+  };
+
+  // Check if the centroid is inside the polygon
+  return Polygon.isPointInside(polygon, centroid);
+};
+
+/**
+ * Helper function to check if an edge between two vertices is valid
+ * (either a polygon edge or a valid diagonal)
+ */
+const isEdgeValid = (polygon: Polygon, i: number, j: number): boolean => {
+  const n = polygon.length;
+  
+  // If indices are adjacent in the polygon, the edge is valid
+  if (Math.abs(i - j) === 1 || Math.abs(i - j) === n - 1) {
+    return true;
+  }
+
+  // Otherwise, check if it's a valid diagonal
+  return Polygon.isDiagonalValid(polygon, i, j);
 };
