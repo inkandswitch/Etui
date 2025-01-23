@@ -9,8 +9,6 @@ export default class QueryTool implements Tool {
 
   active: boolean = false;
 
-  start() {}
-
   constructor(querymanager: QueryManager) {
     this.querymanager = querymanager;
   }
@@ -25,12 +23,4 @@ export default class QueryTool implements Tool {
       this.query.updateBottomRight(p.world);
     }
   }
-
-  onMouseMove(_p: MouseData): void {}
-
-  onMouseUp(_p: MouseData): void {}
-
-  onMouseRightClick(p: MouseData): void {}
-
-  onKeyDown(key: string): void {}
 }

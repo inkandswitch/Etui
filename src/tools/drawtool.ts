@@ -34,16 +34,10 @@ export default class DrawTool implements Tool {
     }
   }
 
-  onMouseMove(_p: MouseData): void {}
-
   onMouseUp(_p: MouseData): void {
     if (this.stroke) {
       this.stroke = null;
     }
     console.log(this.strokemanager);
   }
-
-  onMouseRightClick(p: MouseData): void {}
-
-  onKeyDown(key: string): void {}
 }

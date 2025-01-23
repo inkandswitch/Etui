@@ -17,3 +17,7 @@ Point.reflect = (a: Point, b: Point): Point => {
 Point.fromStrokePoint = (sp: StrokePoint): Point => {
   return Point(sp.x, sp.y);
 };
+
+Point.clone = (p: Point): Point => {
+  return Point(p.x, p.y);
+};

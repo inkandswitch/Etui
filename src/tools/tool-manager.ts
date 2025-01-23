@@ -4,12 +4,12 @@ export interface Tool {
   start(): void;
   active: boolean;
 
-  onMouseDown(p: MouseData): void;
-  onMouseMove(p: MouseData): void;
-  onMouseDrag(p: MouseData): void;
-  onMouseUp(p: MouseData): void;
-  onMouseRightClick(p: MouseData): void;
-  onKeyDown(key: string): void;
+  onMouseDown?(p: MouseData): void;
+  onMouseMove?(p: MouseData): void;
+  onMouseDrag?(p: MouseData): void;
+  onMouseUp?(p: MouseData): void;
+  onMouseRightClick?(p: MouseData): void;
+  onKeyDown?(key: string): void;
 }
 
 export default class ToolManager {
@@ -36,26 +36,26 @@ export default class ToolManager {
   }
 
   onMouseDown(p: MouseData) {
-    this.tools.get(this.currentTool)!.onMouseDown(p);
+    this.tools.get(this.currentTool)!.onMouseDown?.(p);
   }
 
   onMouseMove(p: MouseData) {
-    this.tools.get(this.currentTool)!.onMouseMove(p);
+    this.tools.get(this.currentTool)!.onMouseMove?.(p);
   }
 
   onMouseDrag(p: MouseData) {
-    this.tools.get(this.currentTool)!.onMouseDrag(p);
+    this.tools.get(this.currentTool)!.onMouseDrag?.(p);
   }
 
   onMouseUp(p: MouseData) {
-    this.tools.get(this.currentTool)!.onMouseUp(p);
+    this.tools.get(this.currentTool)!.onMouseUp?.(p);
   }
 
   onMouseRightClick(p: MouseData) {
-    this.tools.get(this.currentTool)!.onMouseRightClick(p);
+    this.tools.get(this.currentTool)!.onMouseRightClick?.(p);
   }
 
   onKeyDown(key: string) {
-    this.tools.get(this.currentTool)!.onKeyDown(key);
+    this.tools.get(this.currentTool)!.onKeyDown?.(key);
   }
 }

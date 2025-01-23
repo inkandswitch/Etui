@@ -3,31 +3,28 @@ import { Vec } from "./vec";
 
 export type ParametricCurve = (t: number) => Point;
 
-export function catmullRomPoint(
-  p0: Point,
-  p1: Point,
-  p2: Point,
-  p3: Point,
-  t: number,
-): Point {
-  const t2 = t * t;
-  const t3 = t2 * t;
 
-  const x =
-    0.5 *
-    ((-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3 +
-      (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 +
-      (-p0.x + p2.x) * t +
-      2 * p1.x);
+// --- CURVES ---
+export function parametricLine(p0: Point, p1: Point): (t: number) => Point {
+  return (t: number) => {
+    const x = p0.x + t * (p1.x - p0.x);
+    const y = p0.y + t * (p1.y - p0.y);
+    return { x, y };
+  };
+}
 
-  const y =
-    0.5 *
-    ((-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3 +
-      (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 +
-      (-p0.y + p2.y) * t +
-      2 * p1.y);
-
-  return { x, y };
+export function parametricArc(
+  center: Point,
+  radius: number,
+  startAngle: number,
+  endAngle: number,
+): (t: number) => Point {
+  return (t: number) => {
+    const angle = startAngle + t * (endAngle - startAngle);
+    const x = center.x + radius * Math.cos(angle);
+    const y = center.y + radius * Math.sin(angle);
+    return { x, y };
+  };
 }
 
 export function parametricCatmullRom(
@@ -37,14 +34,6 @@ export function parametricCatmullRom(
   p3: Point,
 ): (t: number) => Point {
   return (t: number) => catmullRomPoint(p0, p1, p2, p3, t);
-}
-
-export function parametricLine(p0: Point, p1: Point): (t: number) => Point {
-  return (t: number) => {
-    const x = p0.x + t * (p1.x - p0.x);
-    const y = p0.y + t * (p1.y - p0.y);
-    return { x, y };
-  };
 }
 
 export function parametricCatmullRomSpline(
@@ -83,6 +72,37 @@ export function parametricCatmullRomSpline(
 
   // Join all segments
   return joinCurves(segments);
+}
+
+
+
+// --- UTILITY ---
+
+export function catmullRomPoint(
+  p0: Point,
+  p1: Point,
+  p2: Point,
+  p3: Point,
+  t: number,
+): Point {
+  const t2 = t * t;
+  const t3 = t2 * t;
+
+  const x =
+    0.5 *
+    ((-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3 +
+      (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 +
+      (-p0.x + p2.x) * t +
+      2 * p1.x);
+
+  const y =
+    0.5 *
+    ((-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3 +
+      (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 +
+      (-p0.y + p2.y) * t +
+      2 * p1.y);
+
+  return { x, y };
 }
 
 export function insertCatmullRomControlPoint(

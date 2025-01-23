@@ -1,87 +1,128 @@
 import Render from "../../render";
-import Beam from "./beam";
 import { Point } from "../../geom/point";
-import StrokeManager from "../ink/stroke-manager";
 import { Vec } from "../../geom/vec";
-import BeamCluster from "./beam-cluster";
+import { Id } from "../id";
+
+import Beam from "./beam";
+import ControlPoint from "./control-point";
 
 export default class BeamManager {
-  strokemanager: StrokeManager;
-  beams: Map<number, Beam> = new Map();
-  clusters: Array<BeamCluster> = [];
-  ids: number = 0;
+  beams: Map<Id, Beam> = new Map();
+  controlPoints: Map<Id, ControlPoint> = new Map();
 
-  constructor(strokemanager: StrokeManager) {
-    this.strokemanager = strokemanager;
+  constructor() {
     this.beams = new Map();
+    this.controlPoints = new Map();
   }
 
-  addCluster(): BeamCluster {
-    let c = new BeamCluster();
-    this.clusters.push(c);
-    return c;
+  findOrAddControlPoint(point: Point): ControlPoint {
+    const found = this.findControlPointNear(point);
+    if (found !== null) {
+      return found;
+    }
+    return this.addControlPoint(point);
   }
 
-  addBeam(): Beam {
-    let b = new Beam([]);
-    let id = this.ids++;
-    this.beams.set(id, b);
-    return b;
+  addControlPoint(point: Point): ControlPoint {
+    const controlPoint = new ControlPoint(point);
+    this.controlPoints.set(controlPoint.id, controlPoint);
+    return controlPoint;
   }
 
-  removeBeam(id: number) {
-    this.beams.delete(id);
+  moveControlPoint(id: Id, point: Point) {
+    let cp = this.controlPoints.get(id)!;
+    cp.move(point);
+    for (const bid of cp.beams) {
+      this.updateBeam(bid);
+    }
   }
 
-  getBeam(id: number): Beam {
-    return this.beams.get(id)!;
+  mergeControlPoint(id: Id) {
+    const controlPoint = this.controlPoints.get(id)!;
+    const mergeDist = 5;
+
+    for (const otherPoint of this.controlPoints.values()) {
+      if (otherPoint.id === id) {
+        continue;
+      }
+      const dist = Vec.dist(otherPoint.point, controlPoint.point);
+      if (dist < mergeDist) {
+        this.replaceControlPoint(otherPoint.id, controlPoint.id);
+        controlPoint.move(otherPoint.point);
+      }
+    }
   }
 
-  // getControlPointNear(p: Point): Point | null {
-  //   for (const beam of this.beams.values()) {
-  //     for (const cp of beam.controlPoints) {
-  //       if (Math.abs(cp.x - p.x) < 5 && Math.abs(cp.y - p.y) < 5) {
-  //         return cp;
-  //       }
-  //     }
-  //   }
-  //   return null;
-  // }
-
-  // updateStrokeIds(mappings: Map<number, Array<number>>) {
-  //   for (const beam of this.beams.values()) {
-  //     beam.updateStrokeIds(mappings);
-  //   }
-  // }
-
-  // update() {
-  //   for (const beam of this.beams.values()) {
-  //     beam.update();
-  //   }
-  // }
-
-  getBeamNear(p: Point): Beam | null {
-    let minDist = 10;
-    let minBeam = null;
-
+  replaceControlPoint(old: Id, replacement: Id) {
     for (const beam of this.beams.values()) {
-      const pointOnBeam = beam.getClosestPointOnBeam(p);
-      const dist = Vec.dist(p, pointOnBeam);
+      beam.replaceControlPoint(old, replacement);
+    }
+    this.controlPoints.delete(old);
+  }
+
+  findControlPointNear(point: Point): ControlPoint | null {
+    let minDist = 5;
+    let minControlPoint: ControlPoint | null = null;
+
+    for (const controlPoint of this.controlPoints.values()) {
+      const dist = Vec.dist(controlPoint.point, point);
       if (dist < minDist) {
         minDist = dist;
-        minBeam = beam;
+        minControlPoint = controlPoint;
       }
     }
 
-    return minBeam;
+    return minControlPoint;
+  }
+
+  addBeam(controlPoints: Array<Id>): Beam {
+    const beam = new Beam(controlPoints);
+    this.beams.set(beam.id, beam);
+
+    for (const cp of controlPoints) {
+      this.controlPoints.get(cp)!.addBeam(beam.id);
+    }
+
+    this.updateBeam(beam.id);
+    return beam;
+  }
+
+  removeBeam(id: Id) {
+    this.beams.delete(id);
+  }
+
+  updateBeam(id: Id) {
+    console.log(this);
+    const beam = this.beams.get(id)!;
+    const points = beam.controlPoints.map(
+      (id) => this.controlPoints.get(id)!.point,
+    );
+    beam.updateCurve(points);
+  }
+
+  getBeam(id: Id): Beam {
+    return this.beams.get(id)!;
   }
 
   render(r: Render) {
-    this.clusters.forEach((c) => {
-      c.render(r);
-    });
-    // this.beams.forEach((b) => {
-    //   b.render(r);
-    // });
+    for (const beam of this.beams.values()) {
+      beam.render(r);
+    }
   }
+
+  // getBeamNear(p: Point): Beam | null {
+  //   let minDist = 10;
+  //   let minBeam = null;
+
+  //   for (const beam of this.beams.values()) {
+  //     const pointOnBeam = beam.getClosestPointOnBeam(p);
+  //     const dist = Vec.dist(p, pointOnBeam);
+  //     if (dist < minDist) {
+  //       minDist = dist;
+  //       minBeam = beam;
+  //     }
+  //   }
+
+  //   return minBeam;
+  // }
 }

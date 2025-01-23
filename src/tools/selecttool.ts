@@ -47,8 +47,6 @@ export default class SelectTool implements Tool {
     }
   }
 
-  onMouseMove(p: MouseData): void {}
-
   onMouseUp(p: MouseData): void {
     if (!this.selected) {
       this.selectionmanager.findStrokesInsideHull();
@@ -57,10 +55,6 @@ export default class SelectTool implements Tool {
     }
     m.redraw();
   }
-
-  onMouseRightClick(p: MouseData): void {}
-
-  onKeyDown(key: string): void {}
 
   cutIfNeeded() {
     if (!this.moved) {

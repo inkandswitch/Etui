@@ -10,7 +10,7 @@ import {
   curvePoints,
   insertCatmullRomControlPoint,
   tangentAtPointOnCurve,
-} from "./geom/spline";
+} from "../../geom/spline";
 
 export default class Beam {
   strokemanager: StrokeManager;
