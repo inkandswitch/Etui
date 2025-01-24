@@ -14,8 +14,12 @@ export default class BeamTool implements Tool {
 
   active: boolean = false;
 
-  mode: "create" | "edit" = "edit";
+  type: "line" | "circle" | "curve" = "line";
+
+  mode: "create" | "insert" | "edit" = "edit";
+
   dragControlPoint: Id | null = null;
+  currentBeamId: Id | null = null;
 
   constructor(
     beammanager: BeamManager,
@@ -29,42 +33,72 @@ export default class BeamTool implements Tool {
 
   start() {
     this.mode = "create";
-    // if (this.selectionmanager.strokes.length > 0) {
-    //   this.mode = "create";
-    // } else {
-    //   this.mode = "edit";
-    // }
+  }
+
+  private getRequiredPoints(): number {
+    const pointsRequired = {
+      line: 2,
+      circle: 2,
+      curve: 4,
+    };
+    return pointsRequired[this.type];
   }
 
   onMouseDown(p: MouseData): void {
-    if (this.mode == "create") {
-      let a = this.beammanager.findOrAddControlPoint(p.world).id;
-      let b = this.beammanager.addControlPoint(p.world).id;
+    console.log(this.mode);
+    if (this.dragControlPoint != null) {
+      this.beammanager.mergeControlPoint(this.dragControlPoint);
+      this.dragControlPoint = null;
 
-      this.beammanager.addBeam([a, b]);
-      this.dragControlPoint = b;
+      if (this.mode == "create") {
+        return;
+      }
+    }
+
+    if (this.mode === "create") {
+      // Create initial two points and beam
+      const firstPoint = this.beammanager.findOrAddControlPoint(p.world).id;
+      const secondPoint = this.beammanager.addControlPoint(p.world).id;
+      this.currentBeamId = this.beammanager.addBeam(
+        [firstPoint, secondPoint],
+        this.type,
+      ).id;
+
+      this.dragControlPoint = secondPoint;
+
+      // If we need more points, switch to insert mode
+      if (this.getRequiredPoints() > 2) {
+        console.log("Switching to insert mode");
+        this.mode = "insert";
+      }
+    } else if (this.mode === "insert") {
+      // Add new point to the existing beam
+      const newPoint = this.beammanager.addControlPoint(p.world).id;
+      this.beammanager.addControlPointToBeam(this.currentBeamId!, newPoint);
+
+      this.dragControlPoint = newPoint;
+
+      // If we have all required points, switch back to create mode
+      const currentPoints = this.beammanager.getBeam(this.currentBeamId!)
+        .controlPoints.length;
+      if (currentPoints === this.getRequiredPoints()) {
+        this.mode = "create";
+        this.currentBeamId = null;
+      }
     }
   }
 
-  onMouseDrag(p: MouseData): void {
+  onMouseMove(p: MouseData): void {
     if (this.dragControlPoint) {
       this.beammanager.moveControlPoint(this.dragControlPoint, p.world);
     }
   }
 
-  onMouseUp(_p: MouseData): void {
-    if (this.dragControlPoint) {
-      this.beammanager.mergeControlPoint(this.dragControlPoint);
+  onKeyDown(key: string): void {
+    if (key == "Enter") {
+      this.mode = "edit";
       this.dragControlPoint = null;
+      this.currentBeamId = null;
     }
   }
-
-  // onKeyDown(key: string): void {
-  //   if (key == "Enter") {
-  //     this.cluster?.bindStrokes(
-  //       Array.from(this.strokemanager.strokes.values()),
-  //     );
-  //     this.mode = "edit";
-  //   }
-  // }
 }

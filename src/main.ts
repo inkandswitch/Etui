@@ -15,6 +15,7 @@ import QueryManager from "query-manager";
 import PropertyPanel from "panels/property-panel";
 import ToolPanel from "panels/tool-panel";
 import SelectionPanel from "panels/selection-panel";
+import BeamPanel from "panels/beam-panel";
 
 import ToolManager from "tools/tool-manager";
 import DrawTool from "tools/drawtool";
@@ -50,6 +51,7 @@ toolmanager.register("query", querytool);
 new ToolPanel(toolmanager);
 new PropertyPanel(drawtool);
 new SelectionPanel(selecttool);
+new BeamPanel(beamtool);
 
 // Handle input
 new Input(camera, toolmanager);
@@ -66,9 +68,9 @@ tick((_dt: number) => {
 
   selectionmanager.render(render);
 
-  if (beamtool.active) {
-    beammanager.render(render);
-  }
+  //if (beamtool.active) {
+  beammanager.render(render);
+  //}
 
   querymanager.render(render);
 

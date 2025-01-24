@@ -18,6 +18,10 @@ export default class Beam {
     this.path = path;
   }
 
+  addControlPoint(id: Id) {
+    this.controlPoints.push(id);
+  }
+
   replaceControlPoint(old: Id, replacement: Id) {
     let idx = this.controlPoints.indexOf(old);
     if (idx != -1) {
@@ -30,6 +34,7 @@ export default class Beam {
   }
 
   render(r: Render) {
-    r.poly(this.pathPoints, stroke("#FF0000", 2));
+    r.poly(this.pathPoints, stroke("#0000FF22", 6), false);
+    r.poly(this.pathPoints, stroke("#FFFFFF88", 4), false);
   }
 }

@@ -5,7 +5,7 @@ import { Id } from "materials/id";
 
 import Beam from "./beam";
 import ControlPoint from "./control-point";
-import { LinePath } from "./path";
+import { LinePath, CirclePath, CurvePath } from "./path";
 
 export default class BeamManager {
   beams: Map<Id, Beam> = new Map();
@@ -75,8 +75,15 @@ export default class BeamManager {
     return minControlPoint;
   }
 
-  addBeam(controlPoints: Array<Id>): Beam {
-    const beam = new Beam(controlPoints, new LinePath());
+  addBeam(controlPoints: Array<Id>, type: string): Beam {
+    let path = new LinePath();
+    if (type == "circle") {
+      path = new CirclePath();
+    } else if (type == "curve") {
+      path = new CurvePath();
+    }
+
+    const beam = new Beam(controlPoints, path);
     this.beams.set(beam.id, beam);
 
     for (const cp of controlPoints) {
@@ -85,6 +92,13 @@ export default class BeamManager {
 
     this.updateBeam(beam.id);
     return beam;
+  }
+
+  addControlPointToBeam(beamId: Id, controlPointId: Id) {
+    const beam = this.beams.get(beamId)!;
+    beam.addControlPoint(controlPointId);
+    this.controlPoints.get(controlPointId)!.addBeam(beamId);
+    this.updateBeam(beamId);
   }
 
   removeBeam(id: Id) {

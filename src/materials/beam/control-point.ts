@@ -1,5 +1,5 @@
 import { Point } from "geom/point";
-import Render, { fill } from "render";
+import Render, { fill, fillAndStroke } from "render";
 import { Id } from "materials/id";
 
 export default class ControlPoint {
@@ -23,6 +23,12 @@ export default class ControlPoint {
   }
 
   render(r: Render) {
-    r.circle(this.point.x, this.point.y, 5, fill("#FF0000"));
+    r.circle(
+      this.point.x,
+      this.point.y,
+      6,
+      fillAndStroke("#FFFFFF", "#00000033", 0.5),
+    );
+    r.circle(this.point.x, this.point.y, 4, fill("#8050FF"));
   }
 }

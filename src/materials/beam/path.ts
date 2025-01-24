@@ -1,33 +1,27 @@
-import { curvePoints, parametricLine, parametricArc } from "geom/curve";
+import {
+  curvePoints,
+  parametricLine,
+  parametricArc,
+  parametricCatmullRomSpline,
+} from "geom/curve";
 import { Point } from "geom/point";
 
-const STEPS = 10;
+const STEPS = 100;
 export default interface Path {
   generatePoints(controls: Array<Point>): Array<Point>;
 }
 
 export class LinePath implements Path {
   generatePoints(controls: Array<Point>): Array<Point> {
-    if (controls.length != 2) {
-      throw Error("Line curve requires exactly 2 control points");
-    }
-
     const p = parametricLine(controls[0], controls[1]);
     return curvePoints(p, STEPS);
   }
 }
 
-export class ArcPath implements Path {
+export class CirclePath implements Path {
   generatePoints(controls: Array<Point>): Array<Point> {
-    if (controls.length != 3) {
-      throw Error(
-        "Arc curve requires exactly 3 control points: center, start, and end",
-      );
-    }
-
     const center = controls[0];
     const start = controls[1];
-    const end = controls[2];
 
     // Calculate radius from center to start point
     const radius = Math.sqrt(
@@ -35,10 +29,14 @@ export class ArcPath implements Path {
     );
 
     // Calculate start and end angles
-    const startAngle = Math.atan2(start.y - center.y, start.x - center.x);
-    const endAngle = Math.atan2(end.y - center.y, end.x - center.x);
+    const p = parametricArc(center, radius, 0, Math.PI * 2);
+    return curvePoints(p, STEPS);
+  }
+}
 
-    const p = parametricArc(center, radius, startAngle, endAngle);
+export class CurvePath implements Path {
+  generatePoints(controls: Array<Point>): Array<Point> {
+    const p = parametricCatmullRomSpline(controls);
     return curvePoints(p, STEPS);
   }
 }
