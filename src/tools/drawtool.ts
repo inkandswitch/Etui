@@ -1,6 +1,6 @@
-import { MouseData } from "../input";
-import Stroke from "../materials/ink/stroke";
-import StrokeManager from "../materials/ink/stroke-manager";
+import { MouseData } from "input";
+import Stroke from "materials/ink/stroke";
+import StrokeManager from "materials/ink/stroke-manager";
 import { Tool } from "./tool-manager";
 
 export default class DrawTool implements Tool {
@@ -12,8 +12,6 @@ export default class DrawTool implements Tool {
   brush: string;
 
   active: boolean = false;
-
-  start() {}
 
   constructor(strokemanager: StrokeManager) {
     this.strokemanager = strokemanager;

@@ -1,10 +1,11 @@
-import Render from "../../render";
-import { Point } from "../../geom/point";
-import { Vec } from "../../geom/vec";
-import { Id } from "../id";
+import Render from "render";
+import { Point } from "geom/point";
+import { Vec } from "geom/vec";
+import { Id } from "materials/id";
 
 import Beam from "./beam";
 import ControlPoint from "./control-point";
+import { LinePath } from "./path";
 
 export default class BeamManager {
   beams: Map<Id, Beam> = new Map();
@@ -32,9 +33,7 @@ export default class BeamManager {
   moveControlPoint(id: Id, point: Point) {
     let cp = this.controlPoints.get(id)!;
     cp.move(point);
-    for (const bid of cp.beams) {
-      this.updateBeam(bid);
-    }
+    this.updateBeamsForControlPoint(id);
   }
 
   mergeControlPoint(id: Id) {
@@ -51,6 +50,7 @@ export default class BeamManager {
         controlPoint.move(otherPoint.point);
       }
     }
+    this.updateBeamsForControlPoint(controlPoint.id);
   }
 
   replaceControlPoint(old: Id, replacement: Id) {
@@ -76,7 +76,7 @@ export default class BeamManager {
   }
 
   addBeam(controlPoints: Array<Id>): Beam {
-    const beam = new Beam(controlPoints);
+    const beam = new Beam(controlPoints, new LinePath());
     this.beams.set(beam.id, beam);
 
     for (const cp of controlPoints) {
@@ -91,13 +91,19 @@ export default class BeamManager {
     this.beams.delete(id);
   }
 
+  updateBeamsForControlPoint(id: Id) {
+    const cp = this.controlPoints.get(id)!;
+    for (const beamId of cp.beams) {
+      this.updateBeam(beamId);
+    }
+  }
+
   updateBeam(id: Id) {
-    console.log(this);
     const beam = this.beams.get(id)!;
     const points = beam.controlPoints.map(
       (id) => this.controlPoints.get(id)!.point,
     );
-    beam.updateCurve(points);
+    beam.updatePath(points);
   }
 
   getBeam(id: Id): Beam {
@@ -107,6 +113,10 @@ export default class BeamManager {
   render(r: Render) {
     for (const beam of this.beams.values()) {
       beam.render(r);
+    }
+
+    for (const cp of this.controlPoints.values()) {
+      cp.render(r);
     }
   }
 

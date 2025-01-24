@@ -1,7 +1,7 @@
-import { MouseData } from "../input";
-import QueryManager from "../query-manager";
+import { MouseData } from "input";
+import QueryManager from "query-manager";
 import { Tool } from "./tool-manager";
-import Query from "../query";
+import Query from "query";
 
 export default class QueryTool implements Tool {
   querymanager: QueryManager;

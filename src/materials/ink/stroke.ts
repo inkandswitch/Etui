@@ -1,7 +1,7 @@
-import { StrokePoint } from "../../geom/strokepoint";
-import { Vec } from "../../geom/vec";
-import Render, { stroke, fill } from "../../render";
-import { MouseData } from "../../input";
+import { StrokePoint } from "geom/strokepoint";
+import { Vec } from "geom/vec";
+import Render, { stroke, fill } from "render";
+import { MouseData } from "input";
 import { StrokeSlice } from "./slicer";
 
 // Basic Stroke Data

@@ -1,5 +1,5 @@
 {
-  "name": "Etui",
+  "name": "etui",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -11,7 +11,8 @@
   "devDependencies": {
     "@types/mithril": "^2.2.7",
     "typescript": "~5.6.2",
-    "vite": "^5.4.10"
+    "vite": "^5.4.10",
+    "vite-tsconfig-paths": "^5.1.4"
   },
   "dependencies": {
     "mithril": "^2.2.12"

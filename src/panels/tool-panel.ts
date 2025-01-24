@@ -1,5 +1,5 @@
 import m from "mithril";
-import ToolManager from "../tool-manager";
+import ToolManager from "tools/tool-manager";
 
 export default class ToolPanel {
   panel: HTMLDivElement;

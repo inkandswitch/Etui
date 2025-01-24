@@ -1,8 +1,8 @@
 import m from "mithril";
 
-import { MouseData } from "../input";
+import { MouseData } from "input";
 import { Tool } from "./tool-manager";
-import SelectionManager from "../selection-manager";
+import SelectionManager from "selection-manager";
 
 export default class SelectTool implements Tool {
   selectionmanager: SelectionManager;

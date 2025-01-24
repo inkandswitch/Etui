@@ -1,14 +1,11 @@
-import { MouseData } from "../input";
+import { MouseData } from "input";
 import { Tool } from "./tool-manager";
 
-import BeamManager from "../materials/beam/beam-manager";
-import Beam from "../materials/beam/beam";
-import BeamCluster from "../materials/beam/beam-cluster";
+import BeamManager from "materials/beam/beam-manager";
 
-import SelectionManager from "../selection-manager";
-import StrokeManager from "../materials/ink/stroke-manager";
-
-import ControlPoint from "../materials/beam/control-point";
+import SelectionManager from "selection-manager";
+import StrokeManager from "materials/ink/stroke-manager";
+import { Id } from "materials/id";
 
 export default class BeamTool implements Tool {
   beammanager: BeamManager;
@@ -44,7 +41,6 @@ export default class BeamTool implements Tool {
       let a = this.beammanager.findOrAddControlPoint(p.world).id;
       let b = this.beammanager.addControlPoint(p.world).id;
 
-      console.log(a, b);
       this.beammanager.addBeam([a, b]);
       this.dragControlPoint = b;
     }

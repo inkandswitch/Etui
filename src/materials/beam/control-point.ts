@@ -1,5 +1,6 @@
-import { Point } from "../../geom/point";
-import { Id } from "../id";
+import { Point } from "geom/point";
+import Render, { fill } from "render";
+import { Id } from "materials/id";
 
 export default class ControlPoint {
   id: Id;
@@ -19,5 +20,9 @@ export default class ControlPoint {
   move(p: Point) {
     this.point.x = p.x;
     this.point.y = p.y;
+  }
+
+  render(r: Render) {
+    r.circle(this.point.x, this.point.y, 5, fill("#FF0000"));
   }
 }

@@ -1,5 +1,5 @@
 import m from "mithril";
-import SelectTool from "../tools/selecttool";
+import SelectTool from "tools/selecttool";
 import { Property, Circle, brushIcon } from "./property";
 
 export default class SelectionPanel {

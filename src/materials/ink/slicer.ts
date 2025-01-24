@@ -1,7 +1,7 @@
-import { StrokePoint } from "../../geom/strokepoint";
-import PropertyStack from "../../property-stack";
-import QueryManager from "../../query-manager";
-import Render, { fill } from "../../render";
+import { StrokePoint } from "geom/strokepoint";
+import PropertyStack from "property-stack";
+import QueryManager from "query-manager";
+import Render, { fill } from "render";
 import StrokeManager from "./stroke-manager";
 import { Brush, dashed, nameToBrush } from "./brush";
 

@@ -1,7 +1,7 @@
-import Camera from "./camera";
-import { Point } from "./geom/point";
-import { Vec } from "./geom/vec";
-import ToolManager from "./tool-manager";
+import Camera from "camera";
+import { Point } from "geom/point";
+import { Vec } from "geom/vec";
+import ToolManager from "tools/tool-manager";
 
 export type MouseData = {
   world: Point;

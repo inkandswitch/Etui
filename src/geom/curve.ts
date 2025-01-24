@@ -3,7 +3,6 @@ import { Vec } from "./vec";
 
 export type ParametricCurve = (t: number) => Point;
 
-
 // --- CURVES ---
 export function parametricLine(p0: Point, p1: Point): (t: number) => Point {
   return (t: number) => {
@@ -74,8 +73,6 @@ export function parametricCatmullRomSpline(
   return joinCurves(segments);
 }
 
-
-
 // --- UTILITY ---
 
 export function catmullRomPoint(
@@ -107,7 +104,7 @@ export function catmullRomPoint(
 
 export function insertCatmullRomControlPoint(
   points: Array<Point>,
-  t: number
+  t: number,
 ): Array<Point> {
   if (points.length < 2) {
     throw new Error("At least 2 points are required to create a spline");
@@ -121,7 +118,7 @@ export function insertCatmullRomControlPoint(
   const n = points.length - 1;
   const segmentLength = 1 / n;
   const segmentIndex = Math.floor(t / segmentLength);
-  
+
   // Create new array with inserted point
   const newPoints = [...points];
   newPoints.splice(segmentIndex + 1, 0, newPoint);
@@ -150,7 +147,7 @@ export function curvePoints(
   curve: ParametricCurve,
   steps: number = 100,
 ): Array<Point> {
-  const points = [];
+  const points: Array<Point> = [];
   for (let i = 0; i <= steps; i++) {
     const t = i / steps;
     points.push(curve(t));

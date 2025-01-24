@@ -1,33 +1,33 @@
-import tick from "./lib/tick";
-import Render from "./render";
-import Input from "./input";
+import tick from "lib/tick";
+import Render from "render";
+import Input from "input";
 
-import Camera from "./camera";
+import Camera from "camera";
 
-import StrokeManager from "./materials/ink/stroke-manager";
-import Slicer from "./materials/ink/slicer";
-import Painter from "./materials/ink/painter";
+import StrokeManager from "materials/ink/stroke-manager";
+import Slicer from "materials/ink/slicer";
+import Painter from "materials/ink/painter";
 
-import SelectionManager from "./selection-manager";
-import BeamManager from "./materials/beam/beam-manager";
-import QueryManager from "./query-manager";
+import SelectionManager from "selection-manager";
+import BeamManager from "materials/beam/beam-manager";
+import QueryManager from "query-manager";
 
-import PropertyPanel from "./panels/property-panel";
-import ToolPanel from "./panels/tool-panel";
-import SelectionPanel from "./panels/selection-panel";
+import PropertyPanel from "panels/property-panel";
+import ToolPanel from "panels/tool-panel";
+import SelectionPanel from "panels/selection-panel";
 
-import ToolManager from "./tools/tool-manager";
-import DrawTool from "./tools/drawtool";
-import SelectTool from "./tools/selecttool";
-import BeamTool from "./tools/beamtool";
-import QueryTool from "./tools/querytool";
+import ToolManager from "tools/tool-manager";
+import DrawTool from "tools/drawtool";
+import SelectTool from "tools/selecttool";
+import BeamTool from "tools/beamtool";
+import QueryTool from "tools/querytool";
 
 const render = new Render();
 const camera = new Camera();
 
 // managers
 const strokemanager = new StrokeManager();
-const beammanager = new BeamManager(strokemanager);
+const beammanager = new BeamManager();
 const selectionmanager = new SelectionManager(strokemanager, beammanager);
 const querymanager = new QueryManager();
 
@@ -54,7 +54,7 @@ new SelectionPanel(selecttool);
 // Handle input
 new Input(camera, toolmanager);
 
-tick((dt: number) => {
+tick((_dt: number) => {
   render.clear();
   render.beginOffset(camera);
 

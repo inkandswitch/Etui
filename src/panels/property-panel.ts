@@ -1,5 +1,5 @@
 import m from "mithril";
-import DrawTool from "../tools/drawtool";
+import DrawTool from "tools/drawtool";
 import { Property, Circle, brushIcon } from "./property";
 
 export default class PropertyPanel {

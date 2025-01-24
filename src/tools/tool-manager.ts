@@ -1,9 +1,8 @@
-import { MouseData } from "../input";
+import { MouseData } from "input";
 
 export interface Tool {
-  start(): void;
   active: boolean;
-
+  start?(): void;
   onMouseDown?(p: MouseData): void;
   onMouseMove?(p: MouseData): void;
   onMouseDrag?(p: MouseData): void;
@@ -31,7 +30,7 @@ export default class ToolManager {
   setCurrentTool(name: string) {
     this.tools.get(this.currentTool)!.active = false;
     this.currentTool = name;
-    this.tools.get(this.currentTool)!.start();
+    this.tools.get(this.currentTool)!.start?.();
     this.tools.get(this.currentTool)!.active = true;
   }
 
