@@ -91,6 +91,8 @@ export default class BeamTool implements Tool {
     if (this.dragControlPoint) {
       this.beammanager.moveControlPoint(this.dragControlPoint, p.world);
     }
+
+    this.beammanager.computeInfluence(p.world);
   }
 
   onKeyDown(key: string): void {

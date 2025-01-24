@@ -39,20 +39,24 @@ export default class DrawTool implements Tool {
   }
 
   onMouseMove(p: MouseData) {
-    let snap = this.beammanager.getClosetPointsOnBeams(p.world);
-    if (snap.length > 0) {
-      const points = snap.map((s) => {
-        const maxDist = 100; // Maximum distance where snapping has any effect
-        const dist = Vec.dist(s, p.world);
-        // Square the strength to make it more non-linear
-        const strength = Math.pow(Math.max(0, 1 - dist / maxDist), 2);
+    // let snap = this.beammanager.getClosetPointsOnBeams(p.world);
+    // if (snap.length > 0) {
+    //   const points = snap.map((s) => {
+    //     const maxDist = 100; // Maximum distance where snapping has any effect
+    //     const dist = Vec.dist(s, p.world);
+    //     // Square the strength to make it more non-linear
+    //     const strength = Math.pow(Math.max(0, 1 - dist / maxDist), 3);
 
-        return Vec.lerp(p.world, s, strength);
-      });
-      this.position = Point.avg(points);
-    } else {
-      this.position = p.world;
-    }
+    //     return Vec.lerp(p.world, s, strength);
+    //   });
+
+    // let closestPoint = points.reduce((prev, curr) =>
+    //   Vec.dist(curr, p.world) < Vec.dist(prev, p.world) ? curr : prev
+    // );
+    // this.position = closestPoint;
+    // } else {
+    this.position = p.world;
+    // }
   }
 
   onMouseDrag(p: MouseData): void {
