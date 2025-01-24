@@ -45,7 +45,6 @@ export default class BeamTool implements Tool {
   }
 
   onMouseDown(p: MouseData): void {
-    console.log(this.mode);
     if (this.dragControlPoint != null) {
       this.beammanager.mergeControlPoint(this.dragControlPoint);
       this.dragControlPoint = null;

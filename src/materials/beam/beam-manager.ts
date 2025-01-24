@@ -124,29 +124,34 @@ export default class BeamManager {
     return this.beams.get(id)!;
   }
 
-  render(r: Render) {
+ 
+
+  getClosetPointsOnBeams(p: Point): Array<Point> {
+    let minDist = 100;
+    let points = [];
+
+    for (const beam of this.beams.values()) {
+      const pointOnBeam = beam.getClosestPointOnBeam(p);
+      const dist = Vec.dist(p, pointOnBeam);
+      if (dist < minDist) {
+        points.push(pointOnBeam);
+      }
+    }
+
+    return points;
+  }
+
+  renderBottom(r: Render) {
     for (const beam of this.beams.values()) {
       beam.render(r);
     }
 
+    
+  }
+
+  renderTop(r: Render) {
     for (const cp of this.controlPoints.values()) {
       cp.render(r);
     }
   }
-
-  // getBeamNear(p: Point): Beam | null {
-  //   let minDist = 10;
-  //   let minBeam = null;
-
-  //   for (const beam of this.beams.values()) {
-  //     const pointOnBeam = beam.getClosestPointOnBeam(p);
-  //     const dist = Vec.dist(p, pointOnBeam);
-  //     if (dist < minDist) {
-  //       minDist = dist;
-  //       minBeam = beam;
-  //     }
-  //   }
-
-  //   return minBeam;
-  // }
 }

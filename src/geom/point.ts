@@ -21,3 +21,14 @@ Point.fromStrokePoint = (sp: StrokePoint): Point => {
 Point.clone = (p: Point): Point => {
   return Point(p.x, p.y);
 };
+
+Point.avg = (p: Array<Point>): Point => {
+  const n = p.length;
+  const sum = p.reduce((acc, point) => {
+    acc.x += point.x;
+    acc.y += point.y;
+    return acc;
+  }, { x: 0, y: 0 });
+
+  return Point(sum.x / n, sum.y / n);
+}

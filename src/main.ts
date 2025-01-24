@@ -38,7 +38,7 @@ const painter = new Painter(slicer);
 
 // Register tools
 const toolmanager = new ToolManager();
-const drawtool = new DrawTool(strokemanager);
+const drawtool = new DrawTool(strokemanager, beammanager);
 toolmanager.register("draw", drawtool);
 const selecttool = new SelectTool(selectionmanager);
 toolmanager.register("select", selecttool);
@@ -60,6 +60,8 @@ tick((_dt: number) => {
   render.clear();
   render.beginOffset(camera);
 
+  beammanager.renderBottom(render);
+
   slicer.update();
   painter.update();
   painter.render(render);
@@ -68,11 +70,13 @@ tick((_dt: number) => {
 
   selectionmanager.render(render);
 
-  //if (beamtool.active) {
-  beammanager.render(render);
-  //}
+  beammanager.renderTop(render);
 
   querymanager.render(render);
+
+  if (drawtool.active) {
+    drawtool.render(render);
+  }
 
   render.endOffset();
 });
