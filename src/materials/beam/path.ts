@@ -6,7 +6,7 @@ import {
 } from "geom/curve";
 import { Point } from "geom/point";
 
-const STEPS = 10;
+const STEPS = 100;
 export default interface Path {
   generatePoints(controls: Array<Point>): Array<Point>;
 }

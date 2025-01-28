@@ -5,6 +5,10 @@ import Render, { stroke } from "render";
 import { Id } from "materials/id";
 import Path from "./path";
 
+function EdgeId(beam_id: Id, a: Id, b: Id){
+  
+}
+
 export default class Beam {
   id: Id;
   controlPoints: Array<Id>;
