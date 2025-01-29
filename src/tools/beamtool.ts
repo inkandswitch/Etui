@@ -58,10 +58,10 @@ export default class BeamTool implements Tool {
       // Create initial two points and beam
       const firstPoint = this.beammanager.findOrAddControlPoint(p.world).id;
       const secondPoint = this.beammanager.addControlPoint(p.world).id;
-      this.currentBeamId = this.beammanager.addBeam(
-        [firstPoint, secondPoint],
-        this.type,
-      ).id;
+      this.currentBeamId = this.beammanager.addBeam([
+        firstPoint,
+        secondPoint,
+      ]).id;
 
       this.dragControlPoint = secondPoint;
 
@@ -91,8 +91,6 @@ export default class BeamTool implements Tool {
     if (this.dragControlPoint) {
       this.beammanager.moveControlPoint(this.dragControlPoint, p.world);
     }
-
-    this.beammanager.computeInfluence(p.world);
   }
 
   onKeyDown(key: string): void {

@@ -101,6 +101,16 @@ export default class Render {
     }
   }
 
+  text(text: string, x: number, y: number, style: RenderStyle) {
+    this.applyStyle(style);
+    if (style.font) {
+      this.ctx.font = style.font;
+    }
+    if (style.doFill) {
+      this.ctx.fillText(text, x, y);
+    }
+  }
+
   createNoiseTexture(width: number, height: number) {
     const tempCanvas = document.createElement("canvas");
     tempCanvas.width = width;
@@ -165,5 +175,14 @@ export function fillAndStroke(
   s.fillStyle = fillStyle;
   s.strokeStyle = strokeStyle;
   s.lineWidth = lineWidth;
+  return s;
+}
+
+export function font(font: string, fill: string): RenderStyle {
+  let s = defaultStyle();
+  s.font = font;
+  s.doFill = true;
+  s.fillStyle = fill;
+  s.doStroke = false;
   return s;
 }

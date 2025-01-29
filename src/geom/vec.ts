@@ -40,3 +40,9 @@ Vec.normalDiff = (a: Vec, b: Vec, scale: number = 1): Vec =>
 Vec.avg = (a: Vec, b: Vec): Vec => Vec((a.x + b.x) / 2, (a.y + b.y) / 2);
 
 Vec.rotate90 = (a: Vec): Vec => Vec(-a.y, a.x);
+
+Vec.bisector = (a: Vec, b: Vec): Vec => {
+  const normalizedA = Vec.normalize(a);
+  const normalizedB = Vec.normalize(b);
+  return Vec.normalize(Vec.add(normalizedA, normalizedB));
+};

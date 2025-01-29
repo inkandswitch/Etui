@@ -60,7 +60,7 @@ tick((_dt: number) => {
   render.clear();
   render.beginOffset(camera);
 
-  beammanager.renderBottom(render);
+  beammanager.renderBack(render);
 
   slicer.update();
   painter.update();
@@ -70,7 +70,7 @@ tick((_dt: number) => {
 
   selectionmanager.render(render);
 
-  beammanager.renderTop(render);
+  beammanager.renderFront(render);
 
   querymanager.render(render);
 

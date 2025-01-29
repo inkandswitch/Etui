@@ -1,28 +1,34 @@
-import Render, { stroke } from "render";
+import Render, { stroke, fill, fillAndStroke } from "render";
+
 import { Point } from "geom/point";
 import { Vec } from "geom/vec";
+
 import { Id } from "materials/id";
 
-import Beam from "./beam";
 import ControlPoint from "./control-point";
-import { LinePath, CirclePath, CurvePath } from "./path";
-import { Area, AreaDescriptor } from "./area";
+import Beam from "./beam";
+import { Polygon } from "geom/polygon";
 
 export default class BeamManager {
-  controlPoints: Map<Id, ControlPoint> = new Map();
+  points: Map<Id, ControlPoint> = new Map();
   beams: Map<Id, Beam> = new Map();
-  areas: Map<Id, Area> = new Map();
 
-  // Potential areas
-  areaDescriptors: Array<AreaDescriptor> = [];
+  potentialAreas: Map<string, Array<Id>> = new Map();
 
-  influence: Array<number> = [];
-  influencePoints: Array<Point> = [];
-  averagePoint: Point = { x: 0, y: 0 };
+  // CONTROL POINTS
+  addControlPoint(point: Point): ControlPoint {
+    const cp = new ControlPoint(point);
+    this.points.set(cp.id, cp);
+    return cp;
+  }
 
-  constructor() {
-    this.beams = new Map();
-    this.controlPoints = new Map();
+  findControlPointNear(point: Point): ControlPoint | null {
+    for (const cp of this.points.values()) {
+      if (Vec.dist(cp.point, point) < 5) {
+        return cp;
+      }
+    }
+    return null;
   }
 
   findOrAddControlPoint(point: Point): ControlPoint {
@@ -33,23 +39,21 @@ export default class BeamManager {
     return this.addControlPoint(point);
   }
 
-  addControlPoint(point: Point): ControlPoint {
-    const controlPoint = new ControlPoint(point);
-    this.controlPoints.set(controlPoint.id, controlPoint);
-    return controlPoint;
-  }
-
   moveControlPoint(id: Id, point: Point) {
-    let cp = this.controlPoints.get(id)!;
-    cp.move(point);
-    this.updateBeamsForControlPoint(id);
+    const cp = this.points.get(id);
+    if (cp) {
+      cp.move(point);
+      for (const beamId of cp.beams) {
+        this.updateBeam(beamId);
+      }
+    }
   }
 
   mergeControlPoint(id: Id) {
-    const controlPoint = this.controlPoints.get(id)!;
+    const controlPoint = this.points.get(id)!;
     const mergeDist = 5;
 
-    for (const otherPoint of this.controlPoints.values()) {
+    for (const otherPoint of this.points.values()) {
       if (otherPoint.id === id) {
         continue;
       }
@@ -59,165 +63,172 @@ export default class BeamManager {
         controlPoint.move(otherPoint.point);
       }
     }
-    this.updateBeamsForControlPoint(controlPoint.id);
 
-    //this.findAreaDescriptors();
+    // Update the beams that are connected to the control point
+    for (const beamId of controlPoint.beams) {
+      this.updateBeam(beamId);
+    }
+
+    console.log(this);
+    // Find valid areas
+    this.findAreas();
   }
 
   replaceControlPoint(old: Id, replacement: Id) {
-    for (const beam of this.beams.values()) {
-      beam.replaceControlPoint(old, replacement);
+    const oldControlPoint = this.points.get(old)!;
+    const replacementControlPoint = this.points.get(replacement)!;
+
+    // Transfer beams from old control point to replacement control point
+    for (const beamId of oldControlPoint.beams) {
+      replacementControlPoint.addBeam(beamId);
     }
-    this.controlPoints.delete(old);
-  }
 
-  findControlPointNear(point: Point): ControlPoint | null {
-    let minDist = 5;
-    let minControlPoint: ControlPoint | null = null;
-
-    for (const controlPoint of this.controlPoints.values()) {
-      const dist = Vec.dist(controlPoint.point, point);
-      if (dist < minDist) {
-        minDist = dist;
-        minControlPoint = controlPoint;
+    // Update beams to reference the replacement control point
+    for (const beamId of oldControlPoint.beams) {
+      const beam = this.beams.get(beamId);
+      if (beam) {
+        beam.replaceControlPoint(old, replacement);
+        this.updateBeam(beamId);
       }
     }
 
-    return minControlPoint;
+    this.points.delete(old);
   }
 
-  addBeam(controlPoints: Array<Id>, type: string): Beam {
-    let path = new LinePath();
-    if (type == "circle") {
-      path = new CirclePath();
-    } else if (type == "curve") {
-      path = new CurvePath();
-    }
+  getControlPointPositions(ids: Array<Id>): Array<Point> {
+    return ids.map((id) => this.points.get(id)!.point);
+  }
 
-    const beam = new Beam(controlPoints, path);
+  // BEAMS
+  addBeam(pts: Array<Id>): Beam {
+    const beam = new Beam(pts);
     this.beams.set(beam.id, beam);
-
-    for (const cp of controlPoints) {
-      this.controlPoints.get(cp)!.addBeam(beam.id);
+    for (const id of pts) {
+      this.points.get(id)!.addBeam(beam.id);
     }
-
     this.updateBeam(beam.id);
     return beam;
   }
 
-  addControlPointToBeam(beamId: Id, controlPointId: Id) {
-    const beam = this.beams.get(beamId)!;
-    beam.addControlPoint(controlPointId);
-    this.controlPoints.get(controlPointId)!.addBeam(beamId);
-    this.updateBeam(beamId);
-  }
-
-  removeBeam(id: Id) {
-    this.beams.delete(id);
-  }
-
-  updateBeamsForControlPoint(id: Id) {
-    const cp = this.controlPoints.get(id)!;
-    for (const beamId of cp.beams) {
-      this.updateBeam(beamId);
+  updateBeam(id: Id) {
+    const beam = this.beams.get(id);
+    if (beam) {
+      beam.updatePath(this.getControlPointPositions(beam.controlPoints));
     }
   }
 
-  updateBeam(id: Id) {
-    const beam = this.beams.get(id)!;
-    const points = beam.controlPoints.map(
-      (id) => this.controlPoints.get(id)!.point,
-    );
-    beam.updatePath(points);
-  }
+  // AREAS
+  findAreas() {
+    // Find areas by finding the shortest cycles for each control point
+    // Then, for each point, we add at most one cycle, avoiding duplicates
+    // This will return the minimum Cycle Basis
 
-  getBeam(id: Id): Beam {
-    return this.beams.get(id)!;
-  }
+    const getUniqueStamp = (ids: Array<Id>): string => {
+      return [...ids].sort().join("-");
+    };
 
-  getClosetPointsOnBeams(p: Point): Array<Point> {
-    let minDist = 100;
-    let points = [];
+    const potentialCycles = new Map<string, Array<Id>>
 
-    for (const beam of this.beams.values()) {
-      const pointOnBeam = beam.getClosestPointOnBeam(p);
-      const dist = Vec.dist(p, pointOnBeam);
-      if (dist < minDist) {
-        points.push(pointOnBeam);
+    for (const pt of this.points.keys()) {
+      const cycles = this.getCyclesForControlPoint(pt);
+      for (const cycle of cycles) {
+        const stamp = getUniqueStamp(cycle);
+        if (!potentialCycles.has(stamp)) {
+          const cyclePoints = cycle.map((id) => this.points.get(id)!.point);
+          const polygon = Polygon(cyclePoints);
+
+          let hasInternalControlPoint = false;
+          for (const point of this.points.values()) {
+            if (!cycle.includes(point.id) && Polygon.isPointInside(polygon, point.point)) {
+              hasInternalControlPoint = true;
+              break;
+            }
+          }
+
+          if (hasInternalControlPoint) {
+            continue;
+          }
+
+          potentialCycles.set(stamp, cycle);
+        }
       }
     }
 
-    return points;
+    const sortedCycles = Array.from(potentialCycles.values()).sort((a, b) => a.length - b.length);
+    
+    let foundCycles = new Map<string, Array<Id>>
+    const pointsInCycles = new Set<Id>();
+
+    for (const cycle of sortedCycles) {
+      const newPoints = cycle.filter((id) => !pointsInCycles.has(id));
+      if (newPoints.length > 0) {
+        const stamp = getUniqueStamp(cycle);
+        foundCycles.set(stamp, cycle);
+        newPoints.forEach((id) => pointsInCycles.add(id));
+      }
+    }
+
+    this.potentialAreas = foundCycles;
   }
 
-  computeInfluence(p: Point) {
-    //let beamInfluence
-    // let points: Array<Point> = [];
-    // let influence: Array<number> = [];
-    // for (const beam of this.beams.values()) {
-    //   for (let i = 1; i < beam.pathPoints.length; i++) {
-    //     points.push(beam.pathPoints[i]);
-    //     influence.push(0);
-    //   }
-    // }
-    // // for(const pt of this.controlPoints.values()) {
-    // //   points.push(pt.point)
-    // //   influence.push(0)
-    // // }
-    // for (let i = 0; i < points.length; i++) {
-    //   for (let j = 0; j < points.length; j++) {
-    //     const p1 = points[i];
-    //     const p2 = points[j];
-    //     if(p1 == p2) {
-    //       continue;
-    //     }
-    //     // Perform operations with p1 and p2
-    //     const lineVec = Vec.sub(p2, p1);
-    //     const pointVec = Vec.sub(p, p1);
-    //     const lineLenSq = Vec.dot(lineVec, lineVec);
-    //     const projection = Vec.dot(pointVec, lineVec) / lineLenSq;
-    //     const clampedProjection = Math.max(0, Math.min(1, projection));
-    //     // Sum weights
-    //     influence[i] += 1 - clampedProjection;
-    //     influence[j] += clampedProjection;
-    //   }
-    //}
-    // Normalize influence so they sum to 1
-    // const totalInfluence = influence.reduce((acc, val) => acc + val, 0);
-    // if (totalInfluence > 0) {
-    //   influence = influence.map(val => val / totalInfluence);
-    // }
-    // this.influence = influence
-    // this.influencePoints = points
-    // this.averagePoint = points.reduce((acc, point, index) => {
-    //   acc.x += point.x * influence[index];
-    //   acc.y += point.y * influence[index];
-    //   return acc;
-    // }, { x: 0, y: 0 });
+  getCyclesForControlPoint(startId: Id): Array<Array<Id>> {
+    const visited = new Set<Id>();
+    const cycles: Array<Array<Id>> = [];
+    const dfs = (currentId: Id, path: Array<Id>) => {
+      if (path.length > 2 && visited.has(currentId)) {
+        const cycleStartIndex = path.indexOf(currentId);
+        if (cycleStartIndex !== -1) {
+          cycles.push(path);
+        }
+        return;
+      }
+
+      visited.add(currentId);
+
+      const currentPoint = this.points.get(currentId)!;
+      for (const beamId of currentPoint.beams) {
+        const beam = this.beams.get(beamId)!;
+        for (const nextId of beam.controlPoints) {
+          if (nextId !== currentId && !path.includes(nextId)) {
+            dfs(nextId, [...path, nextId]);
+          }
+        }
+      }
+
+      visited.delete(currentId);
+    };
+
+    dfs(startId, []);
+
+    // Return cycles, sorted shortest to longest
+    if (cycles.length === 0) {
+      return cycles;
+    }
+
+    return cycles;
   }
 
-  renderBottom(r: Render) {
+  // RENDERING
+  renderBack(r: Render) {
     for (const beam of this.beams.values()) {
       beam.render(r);
     }
+
+    for (const area of this.potentialAreas.values()) {
+      const pts = area.map((id) => this.points.get(id)!.point);
+      const inset = Polygon.offset(Polygon.ensureCounterclockwise(pts), -10);
+      r.poly(inset, stroke("#00FF00", 0.5));
+    }
   }
 
-  renderTop(r: Render) {
-    for (const cp of this.controlPoints.values()) {
+  renderFront(r: Render) {
+    for (const cp of this.points.values()) {
       cp.render(r);
     }
-
-    for (let i = 0; i < this.influencePoints.length; i++) {
-      const point = this.influencePoints[i];
-      const influenceValue = this.influence[i];
-      r.circle(
-        point.x,
-        point.y,
-        influenceValue * 10 * this.influencePoints.length,
-        stroke(`red`, 0.5),
-      );
-    }
-
-    r.circle(this.averagePoint.x, this.averagePoint.y, 5, stroke("blue", 1));
   }
+}
+
+interface Area {
+  controlPoints: Array<Id>;
+  uniqueStamp: string;
 }

@@ -1,8 +1,13 @@
 import { Point } from "./point";
+import { Vec } from "./vec";
 import { Line } from "./line";
 import { Triangle } from "./triangle";
 
 export type Polygon = Array<Point>;
+
+// Statically check if the vertices are given in CCW order
+// You can either use `ensureCounterclockwise` 
+// or simply assert `as CCWPolygon` if you know what your doing.
 export type CCWPolygon = Array<Point> & { readonly __brand: unique symbol };
 
 export function Polygon(points: Array<Point>): Polygon {
@@ -260,9 +265,11 @@ const isTriangleValid = (
 
   // Check if all three edges of the triangle are valid diagonals
   // (or polygon edges)
-  if (!isEdgeValid(polygon, i, j) || 
-      !isEdgeValid(polygon, j, k) || 
-      !isEdgeValid(polygon, k, i)) {
+  if (
+    !isEdgeValid(polygon, i, j) ||
+    !isEdgeValid(polygon, j, k) ||
+    !isEdgeValid(polygon, k, i)
+  ) {
     return false;
   }
 
@@ -282,7 +289,7 @@ const isTriangleValid = (
  */
 const isEdgeValid = (polygon: Polygon, i: number, j: number): boolean => {
   const n = polygon.length;
-  
+
   // If indices are adjacent in the polygon, the edge is valid
   if (Math.abs(i - j) === 1 || Math.abs(i - j) === n - 1) {
     return true;
@@ -290,4 +297,79 @@ const isEdgeValid = (polygon: Polygon, i: number, j: number): boolean => {
 
   // Otherwise, check if it's a valid diagonal
   return Polygon.isDiagonalValid(polygon, i, j);
+};
+
+Polygon.offset = (polygon: CCWPolygon, distance: number): CCWPolygon => {
+  const n = polygon.length;
+  if (n < 3) return polygon;
+
+  const result: Polygon = [];
+
+  for (let i = 0; i < n; i++) {
+    const prev = polygon[(i + n - 1) % n];
+    const curr = polygon[i];
+    const next = polygon[(i + 1) % n];
+
+
+    // Calculate normalized vectors for both edges
+    const v1 = Vec.sub(curr, prev);
+    const v2 = Vec.sub(curr, next);
+
+    const bisector = Vec.bisector(v1, v2);
+
+    // Check if the angle is reflex
+    const crossProduct = Vec.cross(v1, v2);
+    const isReflex = crossProduct < 0;
+
+    // If the angle is reflex, flip the direction of the bisector
+    const adjustedBisector = isReflex ? Vec.mulS(bisector, -1) : bisector;
+
+        
+    result.push(Vec.add(curr, Vec.mulS(adjustedBisector, distance)));
+  }
+
+  return result as CCWPolygon;
+};
+
+Polygon.area = (polygon: Polygon): number => {
+  const n = polygon.length;
+  let area = 0;
+
+  for (let i = 0; i < n; i++) {
+    const { x: x1, y: y1 } = polygon[i];
+    const { x: x2, y: y2 } = polygon[(i + 1) % n];
+    area += x1 * y2 - x2 * y1;
+  }
+
+  return Math.abs(area) / 2;
+};
+
+Polygon.overlap = (polygon1: Polygon, polygon2: Polygon): boolean => {
+  // Check if any vertex of polygon1 is inside polygon2
+  for (const point of polygon1) {
+    if (Polygon.isPointInside(polygon2, point)) {
+      return true;
+    }
+  }
+
+  // Check if any vertex of polygon2 is inside polygon1
+  for (const point of polygon2) {
+    if (Polygon.isPointInside(polygon1, point)) {
+      return true;
+    }
+  }
+
+  // Check if any edge of polygon1 intersects with any edge of polygon2
+  const edges1 = polygon1.map((point, i) => [point, polygon1[(i + 1) % polygon1.length]]);
+  const edges2 = polygon2.map((point, i) => [point, polygon2[(i + 1) % polygon2.length]]);
+
+  for (const [p1, p2] of edges1) {
+    for (const [q1, q2] of edges2) {
+      if (Line.intersect(p1, p2, q1, q2)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
 };
