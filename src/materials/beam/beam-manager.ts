@@ -31,7 +31,7 @@ export default class BeamManager {
 
   findControlPointNear(point: Point): ControlPoint | null {
     for (const cp of this.points.values()) {
-      if (Vec.dist(cp.point, point) < 5) {
+      if (Vec.dist(cp.point, point) < 10) {
         return cp;
       }
     }
@@ -125,6 +125,24 @@ export default class BeamManager {
     beam.updatePath(this.getControlPointPositions(beam.controlPoints));
   }
 
+  findBeamNear(p: Point): Beam | null {
+    let closestBeam: Beam | null = null;
+    let minDistance = 10;
+
+    for (const beam of this.beams.values()) {
+      const closestPoint = beam.closestPointOnBeam(p);
+      if (closestPoint) {
+        const distance = Vec.dist(p, closestPoint);
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestBeam = beam;
+        }
+      }
+    }
+
+    return closestBeam;
+  }
+
   // AREAS
   addArea(cycle: Array<Id>): Area {
     const area = new Area(cycle);
@@ -143,6 +161,16 @@ export default class BeamManager {
     const area = this.areas.get(id)!;
     this.areasByStamp.delete(area.stamp);
     this.areas.delete(id);
+  }
+
+  findAreaNear(p: Point): Area | null {
+    // return area if point is inside
+    for (const area of this.areas.values()) {
+      if (Polygon.isPointInside(area.polyPoints, p)) {
+        return area;
+      }
+    }
+    return null;
   }
 
   // TODO: this is still kinda wrong, and innefficient, will fix this later
