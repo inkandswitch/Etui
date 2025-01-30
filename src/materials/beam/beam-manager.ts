@@ -2,13 +2,12 @@ import Render, { stroke, fill } from "render";
 
 import { Point } from "geom/point";
 import { Vec } from "geom/vec";
-import { Line } from "geom/line";
 
 import { Id } from "materials/id";
 
 import ControlPoint from "./control-point";
-import Beam from "./beam";
-import Area from "./area";
+import Beam, { BeamInfluence } from "./beam";
+import Area, { AreaInfluence } from "./area";
 
 import { Polygon } from "geom/polygon";
 
@@ -18,9 +17,7 @@ export default class BeamManager {
   areas: Map<Id, Area> = new Map();
   areasByStamp: Map<string, Id> = new Map();
 
-  computedInfluence: Point | null = null;
-  // influence: PolygonInfluence | null = null;
-  // visibilityPoly: Polygon | null = null;
+  influence: AreaInfluence | BeamInfluence | null = null;
 
   // CONTROL POINTS
   addControlPoint(point: Point): ControlPoint {
@@ -125,9 +122,8 @@ export default class BeamManager {
     beam.updatePath(this.getControlPointPositions(beam.controlPoints));
   }
 
-  findBeamNear(p: Point): Beam | null {
+  findBeamNear(p: Point, minDistance = 10): Beam | null {
     let closestBeam: Beam | null = null;
-    let minDistance = 10;
 
     for (const beam of this.beams.values()) {
       const closestPoint = beam.closestPointOnBeam(p);
@@ -285,16 +281,36 @@ export default class BeamManager {
 
   // INFLUENCE
 
-  getInfluence(p: Point) {
+  getInfluence(p: Point): AreaInfluence | BeamInfluence | null {
     // Check if point is inside any of the areas
     for (const area of this.areas.values()) {
       if (Polygon.isPointInside(area.polyPoints, p)) {
-        this.computedInfluence = p;
-        return;
+        this.influence = area.getInfluence(p);
+
+        window.wps = Polygon.visibleWachspressCoords(area.polyPoints, p);
+
+        return this.influence;
       }
     }
 
-    this.computedInfluence = null;
+    const beam = this.findBeamNear(p, 1000);
+    if (beam) {
+      this.influence = beam.getInfluence(p);
+      return this.influence;
+    }
+
+    this.influence = null;
+    return null;
+  }
+
+  getPointFromInfluence(influence: AreaInfluence | BeamInfluence): Point {
+    if ("offset" in influence) {
+      const beam = this.beams.get(influence.id)!;
+      return beam.pointFromInfluence(influence);
+    } else {
+      const area = this.areas.get(influence.id)!;
+      return area.pointFromInfluence(influence);
+    }
   }
   //   // Check if point is inside any of the potential areas
   //   for (const [id, area] of this.potentialAreas) {
@@ -358,13 +374,31 @@ export default class BeamManager {
       cp.render(r);
     }
 
-    if (this.computedInfluence) {
-      r.circle(
-        this.computedInfluence.x,
-        this.computedInfluence.y,
-        5,
-        fill("#00FF00"),
-      );
+    if (this.influence) {
+      if ("offset" in this.influence) {
+        // Beam
+        const beam = this.beams.get(this.influence.id)!;
+        const a = beam.influencePoint(this.influence);
+        const b = beam.pointFromInfluence(this.influence);
+        r.line(a.x, a.y, b.x, b.y, stroke("#00FF00", 1));
+      } else {
+        // Area
+        const area = this.areas.get(this.influence.id)!;
+        const polygon = this.influence.weights.map(
+          (w) => area.polyPoints[w.index],
+        );
+        r.poly(polygon, fill("#00FF0011"));
+
+        const point = area.pointFromInfluence(this.influence);
+        r.circle(point.x, point.y, 5, fill("#00FF00"));
+
+        for (const corner of area.polyPoints) {
+          r.line(corner.x, corner.y, point.x, point.y, stroke("#00FF00", 0.5));
+        }
+
+        let pt = Polygon.pointFromVisibleWachspressCoords(area.polyPoints, window.wps)
+        r.circle(pt.x, pt.y, 10, fill("#FF0000"))
+      }
     }
 
     // if (this.influence) {

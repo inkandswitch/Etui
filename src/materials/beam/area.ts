@@ -1,5 +1,6 @@
 import { Id } from "materials/id";
 import { Point } from "geom/point";
+import { Vec } from "geom/vec";
 import { CCWPolygon, Polygon } from "geom/polygon";
 import Render, { fill, font } from "render";
 
@@ -19,8 +20,59 @@ export default class Area {
   }
 
   updatePath(ctrl: Array<Point>) {
-    this.polyPoints = CCWPolygon(ctrl);
+    const poly = CCWPolygon(ctrl);
+    const polypoints = [];
+
+    // for (let i = 0; i < poly.length; i++) {
+    //   const p1 = poly[i];
+    //   const p2 = poly[(i + 1) % poly.length];
+
+    //   const numIntermediatePoints = 2;
+    //   for (let j = 0; j <= numIntermediatePoints; j++) {
+    //     const t = j / (numIntermediatePoints + 1);
+    //     const intermediatePoint = Point(
+    //       p1.x * (1 - t) + p2.x * t,
+    //       p1.y * (1 - t) + p2.y * t,
+    //     );
+    //     polypoints.push(intermediatePoint);
+    //   }
+    // }
+    // this.polyPoints = polypoints as CCWPolygon;
+    this.polyPoints = poly;
+
     this.midPoint = Polygon.centroid(this.polyPoints);
+  }
+
+  getInfluence(p: Point): AreaInfluence {
+    // Get the inscribed polygon
+    const convexPoly = Polygon.largestConvexContaining(this.polyPoints, p);
+    //const convexPoly = Polygon.ensureCounterclockwise(Polygon.findInscribedConvexWithPoint(this.polyPoints, p));
+
+    // Get indexes in larger polygon
+    const convexPolyIndexes = convexPoly.map((p) => this.polyPoints.indexOf(p));
+
+    // Get wachspress weights
+    const wachspressCoords = Polygon.wachspressCoords(convexPoly, p);
+
+    const weights = wachspressCoords.map((w, i) => {
+      return {
+        index: convexPolyIndexes[i],
+        weight: w,
+      };
+    });
+
+    return {
+      id: this.id,
+      weights,
+    };
+  }
+
+  pointFromInfluence(influence: AreaInfluence): Point {
+    const convexPoly = influence.weights.map((w) => this.polyPoints[w.index]);
+    return Polygon.pointFromWachspressCoords(
+      convexPoly as CCWPolygon,
+      influence.weights.map((w) => w.weight),
+    );
   }
 
   render(r: Render) {
@@ -41,3 +93,12 @@ export default class Area {
 export function generateAreaStamp(ids: Array<Id>): string {
   return [...ids].sort().join("-");
 }
+
+export type AreaInfluence = {
+  id: Id;
+  weights: Array<AreaInfluenceWeight>;
+};
+export type AreaInfluenceWeight = {
+  index: number;
+  weight: number;
+};

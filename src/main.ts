@@ -23,6 +23,7 @@ import SelectTool from "tools/selecttool";
 import BeamTool from "tools/beamtool";
 import DragTool from "tools/dragtool";
 import QueryTool from "tools/querytool";
+import { Deformer } from "materials/beam/deformer";
 
 const render = new Render();
 const camera = new Camera();
@@ -34,6 +35,7 @@ const selectionmanager = new SelectionManager(strokemanager, beammanager);
 const querymanager = new QueryManager();
 
 // Pipeline
+const deformer = new Deformer(strokemanager, beammanager);
 const slicer = new Slicer(strokemanager, querymanager);
 const painter = new Painter(slicer);
 
@@ -45,7 +47,7 @@ const selecttool = new SelectTool(selectionmanager);
 toolmanager.register("select", selecttool);
 const beamtool = new BeamTool(beammanager, selectionmanager, strokemanager);
 toolmanager.register("beam", beamtool);
-const dragtool = new DragTool(beammanager);
+const dragtool = new DragTool(beammanager, deformer);
 toolmanager.register("drag", dragtool);
 
 const querytool = new QueryTool(querymanager);
@@ -61,22 +63,20 @@ new BeamPanel(beamtool);
 new Input(camera, toolmanager);
 
 tick((_dt: number) => {
-  render.clear();
-  render.beginOffset(camera);
-
-  beammanager.renderBack(render);
+  // Update pass
 
   slicer.update();
   painter.update();
+
+  // render pass
+  render.clear();
+  render.beginOffset(camera);
+  beammanager.renderBack(render);
   painter.render(render);
-
-  //strokemanager.render(render);
-
   selectionmanager.render(render);
-
   beammanager.renderFront(render);
-
   querymanager.render(render);
+  deformer.render(render);
 
   if (drawtool.active) {
     drawtool.render(render);

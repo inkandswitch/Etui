@@ -40,62 +40,6 @@ Polygon.isPointInside = (polygon: Polygon, point: Point): boolean => {
   return inside;
 };
 
-export type WachspressCoords = number[];
-
-Polygon.wachspressCoords = (
-  polygon: CCWPolygon,
-  point: Point,
-): WachspressCoords => {
-  const n = polygon.length;
-  const weights: number[] = new Array(n);
-  let weightSum = 0;
-
-  // Compute weights for each vertex
-  for (let i = 0; i < n; i++) {
-    const prev = polygon[(i + n - 1) % n];
-    const curr = polygon[i];
-    const next = polygon[(i + 1) % n];
-
-    const A = Triangle.signedTriangleArea(prev, curr, next);
-    const A_i = Triangle.signedTriangleArea(point, prev, curr);
-    const A_i1 = Triangle.signedTriangleArea(point, curr, next);
-
-    // Compute weight for current vertex
-    const weight = A / (A_i * A_i1);
-    weights[i] = weight;
-    weightSum += weight;
-  }
-
-  // Normalize weights to get coordinates that sum to 1
-  return weights.map((w) => w / weightSum);
-};
-
-Polygon.pointFromWachspressCoords = (
-  polygon: CCWPolygon,
-  coords: WachspressCoords,
-): Point => {
-  if (polygon.length !== coords.length) {
-    throw new Error(
-      "Number of coordinates must match number of polygon vertices",
-    );
-  }
-
-  // Check if coordinates sum to approximately 1
-  const sum = coords.reduce((a, b) => a + b, 0);
-  if (Math.abs(sum - 1) > 1e-10) {
-    throw new Error("Wachspress coordinates must sum to 1");
-  }
-
-  // Compute weighted sum of vertices
-  const point = { x: 0, y: 0 };
-  for (let i = 0; i < polygon.length; i++) {
-    point.x += coords[i] * polygon[i].x;
-    point.y += coords[i] * polygon[i].y;
-  }
-
-  return point;
-};
-
 Polygon.ensureCounterclockwise = (polygon: Polygon): CCWPolygon => {
   if (polygon.length < 3) return polygon as CCWPolygon;
 
@@ -307,7 +251,7 @@ Polygon.offset = (polygon: CCWPolygon, distance: number): CCWPolygon => {
   if (n < 3) return polygon;
 
   const result: Polygon = [];
-  
+
   // For each vertex, compute the offset lines of its adjacent edges
   for (let i = 0; i < n; i++) {
     const prev = polygon[(i + n - 1) % n];
@@ -325,16 +269,17 @@ Polygon.offset = (polygon: CCWPolygon, distance: number): CCWPolygon => {
     // Create offset lines by moving the original edges outward
     const l1 = {
       a: Vec.add(prev, Vec.mulS(n1, distance)),
-      b: Vec.add(curr, Vec.mulS(n1, distance))
+      b: Vec.add(curr, Vec.mulS(n1, distance)),
     };
+
     const l2 = {
       a: Vec.add(curr, Vec.mulS(n2, distance)),
-      b: Vec.add(next, Vec.mulS(n2, distance))
+      b: Vec.add(next, Vec.mulS(n2, distance)),
     };
 
     // Find intersection of the offset lines
     const intersection = Line.intersect(l1, l2, true);
-    
+
     // If lines are parallel or nearly parallel, fall back to simple offset
     if (!intersection) {
       result.push(Vec.add(curr, Vec.mulS(n1, distance)));
@@ -342,7 +287,6 @@ Polygon.offset = (polygon: CCWPolygon, distance: number): CCWPolygon => {
       result.push(intersection);
     }
   }
-
   return result as CCWPolygon;
 };
 
@@ -614,18 +558,265 @@ Polygon.centroid = (polygon: Polygon): Point => {
   for (let i = 0; i < n; i++) {
     const p1 = polygon[i];
     const p2 = polygon[(i + 1) % n];
-    
+
     // Compute signed area of triangle formed with origin
     const crossProduct = Vec.cross(p1, p2);
     area += crossProduct;
-    
+
     // Accumulate weighted centroid coordinates
     center = Vec.add(center, Vec.mulS(Vec.add(p1, p2), crossProduct));
   }
 
   // Complete the area calculation
   area /= 2;
-  
+
   // Compute final centroid coordinates
   return Vec.divS(center, 6 * area);
+};
+
+// WACHSPRESS COORDS
+export type WachspressCoords = number[];
+
+Polygon.wachspressCoords = (
+  polygon: CCWPolygon,
+  point: Point,
+): WachspressCoords => {
+  const n = polygon.length;
+  const weights: number[] = new Array(n);
+  let weightSum = 0;
+
+  // Compute weights for each vertex
+  for (let i = 0; i < n; i++) {
+    const prev = polygon[(i + n - 1) % n];
+    const curr = polygon[i];
+    const next = polygon[(i + 1) % n];
+
+    const A = Triangle.signedTriangleArea(prev, curr, next);
+    const A_i = Triangle.signedTriangleArea(point, prev, curr);
+    const A_i1 = Triangle.signedTriangleArea(point, curr, next);
+
+    // Compute weight for current vertex
+    const weight = A / (A_i * A_i1);
+    weights[i] = weight;
+    weightSum += weight;
+  }
+
+  // Normalize weights to get coordinates that sum to 1
+  return weights.map((w) => w / weightSum);
+};
+
+Polygon.pointFromWachspressCoords = (
+  polygon: CCWPolygon,
+  coords: WachspressCoords,
+): Point => {
+  if (polygon.length !== coords.length) {
+    throw new Error(
+      "Number of coordinates must match number of polygon vertices",
+    );
+  }
+
+  // Check if coordinates sum to approximately 1
+  const sum = coords.reduce((a, b) => a + b, 0);
+  if (Math.abs(sum - 1) > 1e-10) {
+    throw new Error("Wachspress coordinates must sum to 1");
+  }
+
+  // Compute weighted sum of vertices
+  const point = { x: 0, y: 0 };
+  for (let i = 0; i < polygon.length; i++) {
+    point.x += coords[i] * polygon[i].x;
+    point.y += coords[i] * polygon[i].y;
+  }
+
+  return point;
+};
+
+Polygon.findInscribedConvexWithPoint = (
+  polygon: CCWPolygon,
+  point: Point,
+  k: number = 1
+): CCWPolygon => {
+  if (!Polygon.isPointInside(polygon, point)) {
+    throw new Error("Point must be inside the polygon");
+  }
+
+  // Step 1: Identify convex and concave vertices
+  const reflexVertices = new Set(Polygon.getReflexVertices(polygon));
+  const convexVertices = polygon.filter((_, i) => !reflexVertices.has(i));
+
+  // Step 2: Find k-nearest convex vertices to point A
+  const sortedByDistance = [...convexVertices].sort(
+    (a, b) => Vec.dist(point, a) - Vec.dist(point, b)
+  );
+  let currentPolygon = sortedByDistance.slice(0, k) as CCWPolygon;
+
+  // Ensure the initial polygon contains the point
+  while (!Polygon.isPointInside(currentPolygon, point) && k < sortedByDistance.length) {
+    currentPolygon = sortedByDistance.slice(0, ++k) as CCWPolygon;
+  }
+
+  if (!Polygon.isPointInside(currentPolygon, point)) {
+    throw new Error("Could not find initial convex polygon containing point");
+  }
+
+  // Step 3: Try to add remaining convex vertices
+  for (const vertex of convexVertices) {
+    // Skip vertices already in the polygon
+    if (currentPolygon.some(v => v.x === vertex.x && v.y === vertex.y)) continue;
+
+    // Try adding the vertex at each possible position
+    for (let i = 0; i <= currentPolygon.length; i++) {
+      const candidate = [
+        ...currentPolygon.slice(0, i),
+        vertex,
+        ...currentPolygon.slice(i)
+      ];
+
+      // Check if adding this vertex maintains a valid convex polygon
+      if (isValidConvexSubPolygon(polygon, candidate as CCWPolygon, point)) {
+        currentPolygon = candidate as CCWPolygon;
+        break;
+      }
+    }
+  }
+
+  // Step 4: Ensure convexity and containment
+  const convexHull = computeConvexHull(currentPolygon);
+  
+  // Verify the convex hull is still contained in the original polygon
+  // and contains the point
+  if (
+    isPolygonContained(convexHull, polygon) &&
+    Polygon.isPointInside(convexHull, point)
+  ) {
+    return convexHull;
+  }
+
+  return currentPolygon;
+};
+
+/**
+ * Compute the convex hull of a set of points using Graham Scan
+ */
+const computeConvexHull = (points: Point[]): CCWPolygon => {
+  if (points.length < 3) return points as CCWPolygon;
+
+  // Find point with lowest y-coordinate (and leftmost if tied)
+  const start = points.reduce((min, p) => 
+    p.y < min.y || (p.y === min.y && p.x < min.x) ? p : min
+  );
+
+  // Sort points by polar angle with respect to start point
+  const sorted = points
+    .filter(p => p !== start)
+    .sort((a, b) => {
+      const angleA = Math.atan2(a.y - start.y, a.x - start.x);
+      const angleB = Math.atan2(b.y - start.y, b.x - start.x);
+      return angleA - angleB;
+    });
+
+  // Initialize hull with start point and first two sorted points
+  const hull = [start, sorted[0]];
+  
+  // Process remaining points
+  for (let i = 1; i < sorted.length; i++) {
+    while (
+      hull.length >= 2 &&
+      !isLeftTurn(
+        hull[hull.length - 2],
+        hull[hull.length - 1],
+        sorted[i]
+      )
+    ) {
+      hull.pop();
+    }
+    hull.push(sorted[i]);
+  }
+
+  return hull as CCWPolygon;
+};
+
+/**
+ * Helper function to check if three points make a left turn
+ */
+const isLeftTurn = (p1: Point, p2: Point, p3: Point): boolean => {
+  return (
+    (p2.x - p1.x) * (p3.y - p1.y) - (p2.y - p1.y) * (p3.x - p1.x) > 0
+  );
+};
+
+/**
+ * Check if polygon A is completely contained within polygon B
+ */
+const isPolygonContained = (polyA: Polygon, polyB: Polygon): boolean => {
+  // Check if all vertices of A are inside B
+  return polyA.every(point => Polygon.isPointInside(polyB, point));
+};
+
+Polygon.visibleWachspressCoords = (
+  polygon: CCWPolygon,
+  point: Point,
+): (number | null)[] => {
+  const n = polygon.length;
+  const result: (number | null)[] = new Array(n).fill(null);
+  
+  // First pass: create a reduced polygon of only visible vertices
+  const visibleIndices: number[] = [];
+  const visibleVertices: Point[] = [];
+  
+  for (let i = 0; i < n; i++) {
+    if (isVertexVisible(polygon, point, polygon[i], i)) {
+      visibleIndices.push(i);
+      visibleVertices.push(polygon[i]);
+    }
+  }
+
+  // If we have fewer than 3 visible vertices, we can't compute coordinates
+  if (visibleVertices.length < 3) {
+    return result;
+  }
+
+  // Second pass: compute Wachspress coordinates for the reduced polygon
+  const reducedPolygon = visibleVertices as CCWPolygon;
+  const coords = Polygon.wachspressCoords(reducedPolygon, point);
+
+  // Map the coordinates back to the original polygon indices
+  for (let i = 0; i < visibleIndices.length; i++) {
+    result[visibleIndices[i]] = coords[i];
+  }
+
+  return result;
+};
+
+Polygon.pointFromVisibleWachspressCoords = (
+  polygon: CCWPolygon,
+  coords: (number | null)[],
+): Point => {
+  if (polygon.length !== coords.length) {
+    throw new Error(
+      "Number of coordinates must match number of polygon vertices",
+    );
+  }
+
+  // Compute weighted sum of vertices
+  const point = { x: 0, y: 0 };
+  let weightSum = 0;
+
+  for (let i = 0; i < polygon.length; i++) {
+    if (coords[i] !== null) {
+      point.x += coords[i]! * polygon[i].x;
+      point.y += coords[i]! * polygon[i].y;
+      weightSum += coords[i]!;
+    }
+  }
+
+  if (weightSum === 0) {
+    throw new Error("Sum of visible Wachspress coordinates must not be zero");
+  }
+
+  // Normalize the point by the sum of the weights
+  point.x /= weightSum;
+  point.y /= weightSum;
+
+  return point;
 };
