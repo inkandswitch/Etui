@@ -1,9 +1,12 @@
 import { Point } from "./point";
+import { Vec } from "./vec";
 
 export type Line = {
   a: Point;
   b: Point;
 };
+
+export type TUCoordinate = { t: number; u: number };
 
 export function Line(a: Point, b: Point): Line {
   return { a, b };
@@ -84,4 +87,53 @@ Line.intersectOffset = (a: Line, b: Line): number | null => {
   } else {
     return null; // Intersection is outside the line segment bounds
   }
+};
+
+Line.projectPoint = (line: Line, p: Point): TUCoordinate => {
+  // Get line vector
+  const lineVec = Vec.sub(line.b, line.a);
+  
+  // Get vector from line start to point
+  const pointVec = Vec.sub(p, line.a);
+  
+  // Project pointVec onto lineVec to get t
+  const lineLength = Vec.len(lineVec);
+  const t = Vec.dot(pointVec, lineVec) / (lineLength * lineLength);
+  
+  
+  // Get the projected point on line
+  const projectedPoint = Line.pointAtT(line, t);
+  
+  // Determine sign of u using cross product
+  const sign = Math.sign(Vec.cross(lineVec, pointVec));
+
+  // Calculate signed u as the distance from point to its projection
+  const u = Vec.dist(p, projectedPoint) * sign;
+  
+  
+  return { t, u };
+};
+
+Line.deprojectPoint = (line: Line, tu: TUCoordinate): Point => {
+  const { t, u } = tu;
+
+  // Get line vector
+  const lineVec = Vec.sub(line.b, line.a);
+
+  // Calculate the point on the line at parameter t
+  const pointOnLine = Vec.add(line.a, Vec.mul(lineVec, t));
+
+  // Calculate the normal vector to the line (rotate90 gives us the normal)
+  const normal = Vec.normalize(Vec.rotate90(lineVec));
+
+  // Calculate the final point by moving along the normal by distance u
+  return Vec.add(pointOnLine, Vec.mul(normal, u));
+};
+
+Line.pointAtT = (line: Line, t: number): Point => {
+  // Get line vector
+  const lineVec = Vec.sub(line.b, line.a);
+
+  // Calculate the point on the line at parameter t
+  return Vec.add(line.a, Vec.mul(lineVec, t));
 };

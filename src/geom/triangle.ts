@@ -92,6 +92,12 @@ Triangle.pointFromBarycentricCoords = (
   };
 };
 
+Triangle.isPointInside = (triangle: Triangle, point: Point): boolean => {
+  const coords = Triangle.barycentricCoords(triangle, point);
+  return BarycentricCoords.isInside(coords);
+};
+
+
 
 BarycentricCoords.isInside = (coords: BarycentricCoords): boolean => {
   return coords.u >= 0 && coords.v >= 0 && coords.w >= 0;

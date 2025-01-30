@@ -37,6 +37,11 @@ export default class ControlPoint {
     );
     r.circle(this.point.x, this.point.y, 4, fill("#8050FF"));
 
-    r.text(this.id, this.point.x, this.point.y, font("14px monospace", "black"))
+    r.text(
+      this.id,
+      this.point.x + 5,
+      this.point.y - 5,
+      font("10px monospace", "#8050FF"),
+    );
   }
 }

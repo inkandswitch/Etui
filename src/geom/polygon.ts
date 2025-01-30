@@ -5,13 +5,16 @@ import { Triangle } from "./triangle";
 
 export type Polygon = Array<Point>;
 
-// Statically check if the vertices are given in CCW order
-// You can either use `ensureCounterclockwise` 
-// or simply assert `as CCWPolygon` if you know what your doing.
-export type CCWPolygon = Array<Point> & { readonly __brand: unique symbol };
-
 export function Polygon(points: Array<Point>): Polygon {
   return points;
+}
+
+// Statically check if the vertices are given in CCW order
+// You can either use `ensureCounterclockwise`
+// or simply assert `as CCWPolygon` if you know what your doing.
+export type CCWPolygon = Array<Point> & { readonly __brand: unique symbol };
+export function CCWPolygon(poly: Polygon): CCWPolygon {
+  return Polygon.ensureCounterclockwise(poly);
 }
 
 // Assumption: The polygon is simple (does not intersect itself)
@@ -304,28 +307,40 @@ Polygon.offset = (polygon: CCWPolygon, distance: number): CCWPolygon => {
   if (n < 3) return polygon;
 
   const result: Polygon = [];
-
+  
+  // For each vertex, compute the offset lines of its adjacent edges
   for (let i = 0; i < n; i++) {
     const prev = polygon[(i + n - 1) % n];
     const curr = polygon[i];
     const next = polygon[(i + 1) % n];
 
-
-    // Calculate normalized vectors for both edges
+    // Get vectors for the two edges
     const v1 = Vec.sub(curr, prev);
-    const v2 = Vec.sub(curr, next);
+    const v2 = Vec.sub(next, curr);
 
-    const bisector = Vec.bisector(v1, v2);
+    // Get normalized normals (rotate90 gives us the normal pointing outward for CCW)
+    const n1 = Vec.normalize(Vec.rotate90(v1));
+    const n2 = Vec.normalize(Vec.rotate90(v2));
 
-    // Check if the angle is reflex
-    const crossProduct = Vec.cross(v1, v2);
-    const isReflex = crossProduct < 0;
+    // Create offset lines by moving the original edges outward
+    const l1 = {
+      a: Vec.add(prev, Vec.mulS(n1, distance)),
+      b: Vec.add(curr, Vec.mulS(n1, distance))
+    };
+    const l2 = {
+      a: Vec.add(curr, Vec.mulS(n2, distance)),
+      b: Vec.add(next, Vec.mulS(n2, distance))
+    };
 
-    // If the angle is reflex, flip the direction of the bisector
-    const adjustedBisector = isReflex ? Vec.mulS(bisector, -1) : bisector;
-
-        
-    result.push(Vec.add(curr, Vec.mulS(adjustedBisector, distance)));
+    // Find intersection of the offset lines
+    const intersection = Line.intersect(l1, l2, true);
+    
+    // If lines are parallel or nearly parallel, fall back to simple offset
+    if (!intersection) {
+      result.push(Vec.add(curr, Vec.mulS(n1, distance)));
+    } else {
+      result.push(intersection);
+    }
   }
 
   return result as CCWPolygon;
@@ -360,8 +375,14 @@ Polygon.overlap = (polygon1: Polygon, polygon2: Polygon): boolean => {
   }
 
   // Check if any edge of polygon1 intersects with any edge of polygon2
-  const edges1 = polygon1.map((point, i) => [point, polygon1[(i + 1) % polygon1.length]]);
-  const edges2 = polygon2.map((point, i) => [point, polygon2[(i + 1) % polygon2.length]]);
+  const edges1 = polygon1.map((point, i) => [
+    point,
+    polygon1[(i + 1) % polygon1.length],
+  ]);
+  const edges2 = polygon2.map((point, i) => [
+    point,
+    polygon2[(i + 1) % polygon2.length],
+  ]);
 
   for (const [p1, p2] of edges1) {
     for (const [q1, q2] of edges2) {
@@ -372,4 +393,239 @@ Polygon.overlap = (polygon1: Polygon, polygon2: Polygon): boolean => {
   }
 
   return false;
+};
+
+Polygon.visibilityPolygon = (polygon: Polygon, point: Point): Polygon => {
+  if (!Polygon.isPointInside(polygon, point)) {
+    throw new Error("Viewpoint must be inside the polygon");
+  }
+
+  const n = polygon.length;
+  const visibleVertices: Point[] = [];
+
+  // Process each vertex of the polygon
+  for (let i = 0; i < n; i++) {
+    const vertex = polygon[i];
+    const nextVertex = polygon[(i + 1) % n];
+
+    // Check if the vertex is visible
+    if (isVertexVisible(polygon, point, vertex, i)) {
+      visibleVertices.push(vertex);
+    }
+
+    // Check if the edge intersects with any ray from the viewpoint
+    const intersections = findEdgeIntersections(
+      point,
+      vertex,
+      nextVertex,
+      polygon,
+    );
+    visibleVertices.push(...intersections);
+  }
+
+  // Sort vertices by angle around the viewpoint
+  const sortedVertices = visibleVertices.sort((a, b) => {
+    const angleA = Math.atan2(a.y - point.y, a.x - point.x);
+    const angleB = Math.atan2(b.y - point.y, b.x - point.x);
+    return angleA - angleB;
+  });
+
+  return sortedVertices;
+};
+
+/**
+ * Checks if a vertex is visible from a viewpoint
+ */
+const isVertexVisible = (
+  polygon: Polygon,
+  viewpoint: Point,
+  vertex: Point,
+  vertexIndex: number,
+): boolean => {
+  const n = polygon.length;
+  const ray = { a: viewpoint, b: vertex };
+
+  // Check against all edges except those adjacent to the vertex
+  for (let i = 0; i < n; i++) {
+    const nextI = (i + 1) % n;
+
+    // Skip edges adjacent to the vertex
+    if (i === vertexIndex || nextI === vertexIndex) continue;
+
+    const edge = { a: polygon[i], b: polygon[nextI] };
+
+    // If there's an intersection, the vertex is not visible
+    if (Line.intersect(ray, edge)) return false;
+  }
+
+  return true;
+};
+
+/**
+ * Finds intersection points between a view ray and a polygon edge
+ */
+const findEdgeIntersections = (
+  viewpoint: Point,
+  edgeStart: Point,
+  edgeEnd: Point,
+): Point[] => {
+  const intersections: Point[] = [];
+  const edge = { a: edgeStart, b: edgeEnd };
+
+  // Get the angle range of the edge from the viewpoint
+  const startAngle = Math.atan2(
+    edgeStart.y - viewpoint.y,
+    edgeStart.x - viewpoint.x,
+  );
+  const endAngle = Math.atan2(edgeEnd.y - viewpoint.y, edgeEnd.x - viewpoint.x);
+
+  // Check a few angles in between for potential visibility changes
+  const steps = 10;
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    const angle = startAngle * (1 - t) + endAngle * t;
+
+    // Create a ray at this angle
+    const ray = {
+      a: viewpoint,
+      b: {
+        x: viewpoint.x + Math.cos(angle) * 1000, // Use a large enough distance
+        y: viewpoint.y + Math.sin(angle) * 1000,
+      },
+    };
+
+    // Find the closest intersection point
+    const intersection = Line.intersect(ray, edge);
+    if (intersection) {
+      intersections.push(intersection);
+    }
+  }
+
+  return intersections;
+};
+
+Polygon.largestConvexContaining = (
+  polygon: CCWPolygon,
+  point: Point,
+): CCWPolygon => {
+  if (!Polygon.isPointInside(polygon, point)) {
+    throw new Error("Point must be inside the polygon");
+  }
+
+  // Get all possible triangles in the polygon
+  const triangles = Polygon.getAllTriangles(polygon);
+
+  // Filter triangles that contain the point
+  const containingTriangles = triangles.filter((triangle) =>
+    Triangle.isPointInside(triangle, point),
+  );
+
+  if (containingTriangles.length === 0) {
+    throw new Error("No valid triangles found containing the point");
+  }
+
+  // Start with the triangle containing the point that has the largest area
+  let bestTriangle = containingTriangles.reduce((max, triangle) =>
+    Triangle.area(triangle) > Triangle.area(max) ? triangle : max,
+  );
+
+  // Initialize result with the best triangle's vertices
+  let result: Polygon = [bestTriangle.a, bestTriangle.b, bestTriangle.c];
+
+  // Try to add more vertices to make the polygon larger while keeping it convex
+  for (const vertex of polygon) {
+    // Skip vertices already in the result
+    if (result.some((p) => p.x === vertex.x && p.y === vertex.y)) continue;
+
+    // Try adding the vertex at each possible position
+    for (let i = 0; i <= result.length; i++) {
+      const candidate = [...result.slice(0, i), vertex, ...result.slice(i)];
+
+      // Check if adding this vertex creates a valid convex polygon
+      // that lies inside the original polygon and contains the point
+      if (isValidConvexSubPolygon(polygon, candidate as CCWPolygon, point)) {
+        result = candidate;
+        break;
+      }
+    }
+  }
+
+  return Polygon.ensureCounterclockwise(result);
+};
+
+/**
+ * Helper function to check if a polygon is:
+ * 1. Convex
+ * 2. Inside the original polygon
+ * 3. Contains the given point
+ */
+const isValidConvexSubPolygon = (
+  originalPolygon: Polygon,
+  candidate: CCWPolygon,
+  point: Point,
+): boolean => {
+  // Check if the polygon is convex (no reflex vertices)
+  if (Polygon.getReflexVertices(candidate).length > 0) {
+    return false;
+  }
+
+  // Check if the point is inside the candidate polygon
+  if (!Polygon.isPointInside(candidate, point)) {
+    return false;
+  }
+
+  // Check if all vertices of the candidate are vertices of the original polygon
+  for (const vertex of candidate) {
+    if (!originalPolygon.some((p) => p.x === vertex.x && p.y === vertex.y)) {
+      return false;
+    }
+  }
+
+  // Check if any edge of the candidate intersects with the original polygon
+  const n = candidate.length;
+  for (let i = 0; i < n; i++) {
+    const j = (i + 1) % n;
+    if (
+      !isEdgeValid(
+        originalPolygon,
+        originalPolygon.findIndex(
+          (p) => p.x === candidate[i].x && p.y === candidate[i].y,
+        ),
+        originalPolygon.findIndex(
+          (p) => p.x === candidate[j].x && p.y === candidate[j].y,
+        ),
+      )
+    ) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+Polygon.centroid = (polygon: Polygon): Point => {
+  const n = polygon.length;
+  if (n < 3) throw new Error("Polygon must have at least 3 vertices");
+
+  let area = 0;
+  let center = Vec(0, 0);
+
+  // Loop through all vertices
+  for (let i = 0; i < n; i++) {
+    const p1 = polygon[i];
+    const p2 = polygon[(i + 1) % n];
+    
+    // Compute signed area of triangle formed with origin
+    const crossProduct = Vec.cross(p1, p2);
+    area += crossProduct;
+    
+    // Accumulate weighted centroid coordinates
+    center = Vec.add(center, Vec.mulS(Vec.add(p1, p2), crossProduct));
+  }
+
+  // Complete the area calculation
+  area /= 2;
+  
+  // Compute final centroid coordinates
+  return Vec.divS(center, 6 * area);
 };

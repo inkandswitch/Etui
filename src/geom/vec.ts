@@ -27,6 +27,7 @@ Vec.project = (a: Vec, b: Vec): Vec => {
 };
 
 Vec.len = (a: Vec): number => Math.hypot(a.x, a.y);
+Vec.lenSq = (a: Vec): number => a.x * a.y + a.y * a.y;
 
 Vec.dist = (a: Vec, b: Vec): number => Vec.len(Vec.sub(a, b));
 
