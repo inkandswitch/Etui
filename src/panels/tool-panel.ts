@@ -31,6 +31,11 @@ const Panel = (toolmanager: ToolManager) => {
           toolmanager,
         }),
         m(Tool, {
+          name: "drag",
+          icon: "🖐️",
+          toolmanager,
+        }),
+        m(Tool, {
           name: "erase",
           icon: "🧽",
           toolmanager,

@@ -21,6 +21,7 @@ import ToolManager from "tools/tool-manager";
 import DrawTool from "tools/drawtool";
 import SelectTool from "tools/selecttool";
 import BeamTool from "tools/beamtool";
+import DragTool from "tools/dragtool";
 import QueryTool from "tools/querytool";
 
 const render = new Render();
@@ -44,6 +45,9 @@ const selecttool = new SelectTool(selectionmanager);
 toolmanager.register("select", selecttool);
 const beamtool = new BeamTool(beammanager, selectionmanager, strokemanager);
 toolmanager.register("beam", beamtool);
+const dragtool = new DragTool(beammanager);
+toolmanager.register("drag", dragtool);
+
 const querytool = new QueryTool(querymanager);
 toolmanager.register("query", querytool);
 

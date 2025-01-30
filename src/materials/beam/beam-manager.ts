@@ -18,8 +18,7 @@ export default class BeamManager {
   areas: Map<Id, Area> = new Map();
   areasByStamp: Map<string, Id> = new Map();
 
-  //potentialAreas: Map<string, Array<Id>> = new Map();
-
+  computedInfluence: Point | null = null;
   // influence: PolygonInfluence | null = null;
   // visibilityPoly: Polygon | null = null;
 
@@ -48,12 +47,16 @@ export default class BeamManager {
   }
 
   moveControlPoint(id: Id, point: Point) {
-    const cp = this.points.get(id);
-    if (cp) {
-      cp.move(point);
-      for (const beamId of cp.beams) {
-        this.updateBeam(beamId);
-      }
+    const cp = this.points.get(id)!;
+    cp.move(point);
+    for (const beamId of cp.beams) {
+      this.updateBeam(beamId);
+    }
+
+    // Update beams
+    // TODO: this is innefficient, we should only update the beams that are connected to the control point
+    for (const areaId of this.areas.keys()) {
+      this.updateArea(areaId);
     }
   }
 
@@ -77,7 +80,6 @@ export default class BeamManager {
       this.updateBeam(beamId);
     }
 
-    console.log(this);
     // Find valid areas
     this.findAreas();
   }
@@ -119,13 +121,31 @@ export default class BeamManager {
   }
 
   updateBeam(id: Id) {
-    const beam = this.beams.get(id);
-    if (beam) {
-      beam.updatePath(this.getControlPointPositions(beam.controlPoints));
-    }
+    const beam = this.beams.get(id)!;
+    beam.updatePath(this.getControlPointPositions(beam.controlPoints));
   }
 
   // AREAS
+  addArea(cycle: Array<Id>): Area {
+    const area = new Area(cycle);
+    this.areas.set(area.id, area);
+    this.areasByStamp.set(area.stamp, area.id);
+    this.updateArea(area.id);
+    return area;
+  }
+
+  updateArea(id: Id) {
+    const area = this.areas.get(id)!;
+    area.updatePath(this.getControlPointPositions(area.controlPoints));
+  }
+
+  removeArea(id: Id) {
+    const area = this.areas.get(id)!;
+    this.areasByStamp.delete(area.stamp);
+    this.areas.delete(id);
+  }
+
+  // TODO: this is still kinda wrong, and innefficient, will fix this later
   findAreas() {
     // Find areas by finding the shortest cycles for each control point
     // Then, for each point, we add at most one cycle, avoiding duplicates
@@ -198,25 +218,6 @@ export default class BeamManager {
     console.log(foundCycles, this.areas);
   }
 
-  addArea(cycle: Array<Id>): Area {
-    const area = new Area(cycle);
-    this.areas.set(area.id, area);
-    this.areasByStamp.set(area.stamp, area.id);
-    this.updateArea(area.id);
-    return area;
-  }
-
-  updateArea(id: Id) {
-    const area = this.areas.get(id)!;
-    area.updatePath(this.getControlPointPositions(area.controlPoints));
-  }
-
-  removeArea(id: Id) {
-    const area = this.areas.get(id)!;
-    this.areasByStamp.delete(area.stamp);
-    this.areas.delete(id);
-  }
-
   getCyclesForControlPoint(startId: Id): Array<Array<Id>> {
     const visited = new Set<Id>();
     const cycles: Array<Array<Id>> = [];
@@ -255,7 +256,18 @@ export default class BeamManager {
   }
 
   // INFLUENCE
-  // getInfluence(p: Point) {
+
+  getInfluence(p: Point) {
+    // Check if point is inside any of the areas
+    for (const area of this.areas.values()) {
+      if (Polygon.isPointInside(area.polyPoints, p)) {
+        this.computedInfluence = p;
+        return;
+      }
+    }
+
+    this.computedInfluence = null;
+  }
   //   // Check if point is inside any of the potential areas
   //   for (const [id, area] of this.potentialAreas) {
   //     const pts = area.map((id) => this.points.get(id)!.point);
@@ -316,6 +328,15 @@ export default class BeamManager {
   renderFront(r: Render) {
     for (const cp of this.points.values()) {
       cp.render(r);
+    }
+
+    if (this.computedInfluence) {
+      r.circle(
+        this.computedInfluence.x,
+        this.computedInfluence.y,
+        5,
+        fill("#00FF00"),
+      );
     }
 
     // if (this.influence) {
