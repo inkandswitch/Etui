@@ -44,35 +44,46 @@ export default class Area {
   }
 
   getInfluence(p: Point): AreaInfluence {
-    // Get the inscribed polygon
-    const convexPoly = Polygon.largestConvexContaining(this.polyPoints, p);
-    //const convexPoly = Polygon.ensureCounterclockwise(Polygon.findInscribedConvexWithPoint(this.polyPoints, p));
-
-    // Get indexes in larger polygon
-    const convexPolyIndexes = convexPoly.map((p) => this.polyPoints.indexOf(p));
-
-    // Get wachspress weights
-    const wachspressCoords = Polygon.wachspressCoords(convexPoly, p);
-
-    const weights = wachspressCoords.map((w, i) => {
-      return {
-        index: convexPolyIndexes[i],
-        weight: w,
-      };
-    });
-
+    const weights = Polygon.visibleMeanValueCoords(this.polyPoints, p);
     return {
       id: this.id,
       weights,
     };
+
+    // // Get the inscribed polygon
+    // const convexPoly = Polygon.largestConvexContaining(this.polyPoints, p);
+    // //const convexPoly = Polygon.ensureCounterclockwise(Polygon.findInscribedConvexWithPoint(this.polyPoints, p));
+
+    // // Get indexes in larger polygon
+    // const convexPolyIndexes = convexPoly.map((p) => this.polyPoints.indexOf(p));
+
+    // // Get wachspress weights
+    // const wachspressCoords = Polygon.wachspressCoords(convexPoly, p);
+
+    // const weights = wachspressCoords.map((w, i) => {
+    //   return {
+    //     index: convexPolyIndexes[i],
+    //     weight: w,
+    //   };
+    // });
+
+    // return {
+    //   id: this.id,
+    //   weights,
+    // };
   }
 
   pointFromInfluence(influence: AreaInfluence): Point {
-    const convexPoly = influence.weights.map((w) => this.polyPoints[w.index]);
-    return Polygon.pointFromWachspressCoords(
-      convexPoly as CCWPolygon,
-      influence.weights.map((w) => w.weight),
+    return Polygon.pointFromVisibleMeanValueCoords(
+      this.polyPoints,
+      influence.weights,
     );
+
+    // const convexPoly = influence.weights.map((w) => this.polyPoints[w.index]);
+    // return Polygon.pointFromWachspressCoords(
+    //   convexPoly as CCWPolygon,
+    //   influence.weights.map((w) => w.weight),
+    // );
   }
 
   render(r: Render) {
@@ -96,9 +107,5 @@ export function generateAreaStamp(ids: Array<Id>): string {
 
 export type AreaInfluence = {
   id: Id;
-  weights: Array<AreaInfluenceWeight>;
-};
-export type AreaInfluenceWeight = {
-  index: number;
-  weight: number;
+  weights: Array<number| null>;
 };

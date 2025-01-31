@@ -6,11 +6,13 @@ import BeamManager from "materials/beam/beam-manager";
 import SelectionManager from "selection-manager";
 import StrokeManager from "materials/ink/stroke-manager";
 import { Id } from "materials/id";
+import { Deformer } from "materials/beam/deformer";
 
 export default class BeamTool implements Tool {
   beammanager: BeamManager;
   selectionmanager: SelectionManager;
   strokemanager: StrokeManager;
+  deformer: Deformer;
 
   active: boolean = false;
 
@@ -25,10 +27,12 @@ export default class BeamTool implements Tool {
     beammanager: BeamManager,
     selectionmanager: SelectionManager,
     strokemanager: StrokeManager,
+    deformer: Deformer,
   ) {
     this.beammanager = beammanager;
     this.selectionmanager = selectionmanager;
     this.strokemanager = strokemanager;
+    this.deformer = deformer;
   }
 
   start() {
@@ -48,6 +52,7 @@ export default class BeamTool implements Tool {
     if (this.dragControlPoint != null) {
       this.beammanager.mergeControlPoint(this.dragControlPoint);
       this.dragControlPoint = null;
+      this.currentBeamId = null;
 
       if (this.mode == "create") {
         return;
@@ -70,21 +75,22 @@ export default class BeamTool implements Tool {
         console.log("Switching to insert mode");
         this.mode = "insert";
       }
-    } else if (this.mode === "insert") {
-      // Add new point to the existing beam
-      const newPoint = this.beammanager.addControlPoint(p.world).id;
-      this.beammanager.addControlPointToBeam(this.currentBeamId!, newPoint);
-
-      this.dragControlPoint = newPoint;
-
-      // If we have all required points, switch back to create mode
-      const currentPoints = this.beammanager.getBeam(this.currentBeamId!)
-        .controlPoints.length;
-      if (currentPoints === this.getRequiredPoints()) {
-        this.mode = "create";
-        this.currentBeamId = null;
-      }
     }
+    // else if (this.mode === "insert") {
+    //   // Add new point to the existing beam
+    //   const newPoint = this.beammanager.addControlPoint(p.world).id;
+    //   this.beammanager.addControlPointToBeam(this.currentBeamId!, newPoint);
+
+    //   this.dragControlPoint = newPoint;
+
+    //   // If we have all required points, switch back to create mode
+    //   const currentPoints = this.beammanager.getBeam(this.currentBeamId!)
+    //     .controlPoints.length;
+    //   if (currentPoints === this.getRequiredPoints()) {
+    //     this.mode = "create";
+    //     this.currentBeamId = null;
+    //   }
+    // }
   }
 
   onMouseMove(p: MouseData): void {

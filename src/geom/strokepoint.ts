@@ -1,4 +1,5 @@
 import { NVec } from "./nvec";
+import { Point } from "./point";
 
 export type StrokePoint = {
   x: number;
@@ -48,4 +49,10 @@ StrokePoint.clone = (pt: StrokePoint): StrokePoint => {
     pt.distance,
     pt.total_distance,
   );
+};
+
+StrokePoint.moveTo = (pt: StrokePoint, p: Point): StrokePoint => {
+  pt.x = p.x;
+  pt.y = p.y;
+  return pt;
 };

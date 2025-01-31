@@ -21,6 +21,10 @@ export default class DragTool implements Tool {
     this.deformer = deformer;
   }
 
+  start() {
+    this.deformer.computeInfluence();
+  }
+
   onMouseDown(p: MouseData): void {
     this.dragControlPoints = null;
     const found = this.beammanager.findControlPointNear(p.world);

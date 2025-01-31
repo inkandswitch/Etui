@@ -45,7 +45,12 @@ const drawtool = new DrawTool(strokemanager, beammanager);
 toolmanager.register("draw", drawtool);
 const selecttool = new SelectTool(selectionmanager);
 toolmanager.register("select", selecttool);
-const beamtool = new BeamTool(beammanager, selectionmanager, strokemanager);
+const beamtool = new BeamTool(
+  beammanager,
+  selectionmanager,
+  strokemanager,
+  deformer,
+);
 toolmanager.register("beam", beamtool);
 const dragtool = new DragTool(beammanager, deformer);
 toolmanager.register("drag", dragtool);
@@ -64,7 +69,7 @@ new Input(camera, toolmanager);
 
 tick((_dt: number) => {
   // Update pass
-
+  deformer.update();
   slicer.update();
   painter.update();
 

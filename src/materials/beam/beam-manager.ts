@@ -102,6 +102,10 @@ export default class BeamManager {
     this.points.delete(old);
   }
 
+  getControlPoint(id: Id): ControlPoint {
+    return this.points.get(id)!;
+  }
+
   getControlPointPositions(ids: Array<Id>): Array<Point> {
     return ids.map((id) => this.points.get(id)!.point);
   }
@@ -115,6 +119,10 @@ export default class BeamManager {
     }
     this.updateBeam(beam.id);
     return beam;
+  }
+
+  getBeam(id: Id): Beam {
+    return this.beams.get(id)!;
   }
 
   updateBeam(id: Id) {
@@ -238,8 +246,6 @@ export default class BeamManager {
         this.removeArea(area.id);
       }
     }
-
-    console.log(foundCycles, this.areas);
   }
 
   getCyclesForControlPoint(startId: Id): Array<Array<Id>> {
@@ -384,10 +390,10 @@ export default class BeamManager {
       } else {
         // Area
         const area = this.areas.get(this.influence.id)!;
-        const polygon = this.influence.weights.map(
-          (w) => area.polyPoints[w.index],
-        );
-        r.poly(polygon, fill("#00FF0011"));
+        // const polygon = this.influence.weights.map(
+        //   (w) => area.polyPoints[w.index],
+        // );
+        // r.poly(polygon, fill("#00FF0011"));
 
         const point = area.pointFromInfluence(this.influence);
         r.circle(point.x, point.y, 5, fill("#00FF00"));
@@ -395,9 +401,6 @@ export default class BeamManager {
         for (const corner of area.polyPoints) {
           r.line(corner.x, corner.y, point.x, point.y, stroke("#00FF00", 0.5));
         }
-
-        let pt = Polygon.pointFromVisibleWachspressCoords(area.polyPoints, window.wps)
-        r.circle(pt.x, pt.y, 10, fill("#FF0000"))
       }
     }
 

@@ -820,3 +820,166 @@ Polygon.pointFromVisibleWachspressCoords = (
 
   return point;
 };
+
+export type MeanValueCoords = number[];
+
+Polygon.meanValueCoords = (polygon: Polygon, point: Point): MeanValueCoords => {
+  const n = polygon.length;
+  const weights: number[] = new Array(n);
+  let weightSum = 0;
+
+  // Compute weights for each vertex
+  for (let i = 0; i < n; i++) {
+    const curr = polygon[i];
+    const prev = polygon[(i + n - 1) % n];
+    const next = polygon[(i + 1) % n];
+
+    // Get vectors from point to vertices
+    const r_i = Vec.sub(curr, point);
+    const r_prev = Vec.sub(prev, point);
+    const r_next = Vec.sub(next, point);
+
+    // Get lengths of vectors
+    const len_i = Vec.len(r_i);
+    const len_prev = Vec.len(r_prev);
+    const len_next = Vec.len(r_next);
+
+    // Skip if point coincides with vertex
+    if (len_i < 1e-10) {
+      return new Array(n).fill(0).map((_, j) => (j === i ? 1 : 0));
+    }
+
+    // Compute angles
+    const alpha = Math.acos(Vec.dot(r_prev, r_i) / (len_prev * len_i));
+    const beta = Math.acos(Vec.dot(r_i, r_next) / (len_i * len_next));
+
+    // Compute weight
+    const weight = (Math.tan(alpha / 2) + Math.tan(beta / 2)) / len_i;
+    weights[i] = weight;
+    weightSum += weight;
+  }
+
+  // Normalize weights to get coordinates that sum to 1
+  return weights.map(w => w / weightSum);
+};
+
+Polygon.pointFromMeanValueCoords = (
+  polygon: Polygon,
+  coords: MeanValueCoords
+): Point => {
+  if (polygon.length !== coords.length) {
+    throw new Error("Number of coordinates must match number of polygon vertices");
+  }
+
+  // Check if coordinates sum to approximately 1
+  const sum = coords.reduce((a, b) => a + b, 0);
+  if (Math.abs(sum - 1) > 1e-10) {
+    throw new Error("Mean value coordinates must sum to 1");
+  }
+
+  // Compute weighted sum of vertices
+  return polygon.reduce(
+    (point, vertex, i) => Vec.add(point, Vec.mulS(vertex, coords[i])),
+    Vec(0, 0)
+  );
+};
+
+Polygon.visibleMeanValueCoords = (
+  polygon: CCWPolygon,
+  point: Point,
+): (number | null)[] => {
+  const n = polygon.length;
+  const result: (number | null)[] = new Array(n).fill(null);
+  
+  // First pass: identify visible vertices
+  const visibleIndices: number[] = [];
+  const visibleVertices: Point[] = [];
+  
+  for (let i = 0; i < n; i++) {
+    if (isVertexVisible(polygon, point, polygon[i], i)) {
+      visibleIndices.push(i);
+      visibleVertices.push(polygon[i]);
+    }
+  }
+
+  // If we have fewer than 2 visible vertices, we can't compute meaningful coordinates
+  if (visibleVertices.length < 2) {
+    return result;
+  }
+
+  // Second pass: compute mean value coordinates for visible vertices
+  const weights: number[] = new Array(visibleVertices.length);
+  let weightSum = 0;
+
+  for (let i = 0; i < visibleVertices.length; i++) {
+    const curr = visibleVertices[i];
+    const prev = visibleVertices[(i + visibleVertices.length - 1) % visibleVertices.length];
+    const next = visibleVertices[(i + 1) % visibleVertices.length];
+
+    // Get vectors from point to vertices
+    const r_i = Vec.sub(curr, point);
+    const r_prev = Vec.sub(prev, point);
+    const r_next = Vec.sub(next, point);
+
+    // Get lengths of vectors
+    const len_i = Vec.len(r_i);
+    const len_prev = Vec.len(r_prev);
+    const len_next = Vec.len(r_next);
+
+    // Skip if point coincides with vertex
+    if (len_i < 1e-10) {
+      const finalResult = new Array(n).fill(null);
+      finalResult[visibleIndices[i]] = 1;
+      return finalResult;
+    }
+
+    // Compute angles
+    const alpha = Math.acos(Vec.dot(r_prev, r_i) / (len_prev * len_i));
+    const beta = Math.acos(Vec.dot(r_i, r_next) / (len_i * len_next));
+
+    // Compute weight
+    const weight = (Math.tan(alpha / 2) + Math.tan(beta / 2)) / len_i;
+    weights[i] = weight;
+    weightSum += weight;
+  }
+
+  // Normalize weights and assign to visible vertices
+  for (let i = 0; i < visibleVertices.length; i++) {
+    result[visibleIndices[i]] = weights[i] / weightSum;
+  }
+
+  return result;
+};
+
+Polygon.pointFromVisibleMeanValueCoords = (
+  polygon: CCWPolygon,
+  coords: (number | null)[],
+): Point => {
+  if (polygon.length !== coords.length) {
+    throw new Error(
+      "Number of coordinates must match number of polygon vertices",
+    );
+  }
+
+  // Compute weighted sum of vertices
+  const point = { x: 0, y: 0 };
+  let weightSum = 0;
+
+  for (let i = 0; i < polygon.length; i++) {
+    if (coords[i] !== null) {
+      point.x += coords[i]! * polygon[i].x;
+      point.y += coords[i]! * polygon[i].y;
+      weightSum += coords[i]!;
+    }
+  }
+
+  if (Math.abs(weightSum) < 1e-10) {
+    throw new Error("Sum of visible mean value coordinates must not be zero");
+  }
+
+  // Normalize the point by the sum of the weights
+  point.x /= weightSum;
+  point.y /= weightSum;
+
+  return point;
+};
