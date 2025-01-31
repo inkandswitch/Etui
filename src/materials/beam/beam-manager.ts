@@ -10,6 +10,7 @@ import Beam, { BeamInfluence } from "./beam";
 import Area, { AreaInfluence } from "./area";
 
 import { Polygon } from "geom/polygon";
+import { Line } from "geom/line";
 
 export default class BeamManager {
   points: Map<Id, ControlPoint> = new Map();
@@ -397,9 +398,22 @@ export default class BeamManager {
 
         const point = area.pointFromInfluence(this.influence);
         r.circle(point.x, point.y, 5, fill("#00FF00"));
-
+        // let hasIntersection = false;
         for (const corner of area.polyPoints) {
-          r.line(corner.x, corner.y, point.x, point.y, stroke("#00FF00", 0.5));
+        //   const ray = Line(corner, point);
+        //   for (let i = 0; i < area.polyPoints.length; i++) {
+        //     const start = area.polyPoints[i];
+        //     const end = area.polyPoints[(i + 1) % area.polyPoints.length];
+        //     const pline = Line(start, end);
+        //     const offset = Line.intersectOffset(pline, ray)
+        //     if(offset && offset > 0 && offset < 1) {
+        //       hasIntersection = true;
+        //       break;
+        //     }
+        //   }
+        //   if (!hasIntersection) {
+            r.line(corner.x, corner.y, point.x, point.y, stroke("#00FF00", 0.5));
+          //}
         }
       }
     }
