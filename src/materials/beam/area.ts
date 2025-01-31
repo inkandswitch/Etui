@@ -1,6 +1,5 @@
 import { Id } from "materials/id";
 import { Point } from "geom/point";
-import { Vec } from "geom/vec";
 import { CCWPolygon, Polygon } from "geom/polygon";
 import Render, { fill, font } from "render";
 
@@ -21,7 +20,6 @@ export default class Area {
 
   updatePath(ctrl: Array<Point>) {
     const poly = CCWPolygon(ctrl);
-    const polypoints = [];
 
     // for (let i = 0; i < poly.length; i++) {
     //   const p1 = poly[i];

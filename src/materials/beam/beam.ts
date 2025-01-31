@@ -5,15 +5,19 @@ import { Vec } from "geom/vec";
 
 import Render, { stroke } from "render";
 
+export type BeamType = "line" | "curve" | "arc"
+
 export default class Beam {
   id: Id;
   controlPoints: Array<Id> = [];
-
   pathPoints: Array<Point> = [];
 
-  constructor(pts: Array<Id>) {
+  type: BeamType = "line";
+
+  constructor(pts: Array<Id>, type: BeamType = "line") {
     this.id = Id();
     this.controlPoints = pts;
+    this.type = type;
   }
 
   replaceControlPoint(old: Id, replacement: Id) {

@@ -10,7 +10,6 @@ import Beam, { BeamInfluence } from "./beam";
 import Area, { AreaInfluence } from "./area";
 
 import { Polygon } from "geom/polygon";
-import { Line } from "geom/line";
 
 export default class BeamManager {
   points: Map<Id, ControlPoint> = new Map();
@@ -311,9 +310,6 @@ export default class BeamManager {
     for (const area of this.areas.values()) {
       if (Polygon.isPointInside(area.polyPoints, p)) {
         this.influence = area.getInfluence(p);
-
-        window.wps = Polygon.visibleWachspressCoords(area.polyPoints, p);
-
         return this.influence;
       }
     }

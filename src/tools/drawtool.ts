@@ -25,7 +25,11 @@ export default class DrawTool implements Tool {
   position: Point = { x: 0, y: 0 };
 
   guides: boolean = false;
-  neatify = 0.8;
+
+  neatify = 0;
+  snappify = 0.7;
+  setneatify: boolean = false;
+  savedPoints: Array<Point> = [];
 
   constructor(strokemanager: StrokeManager, beammanager: BeamManager) {
     this.strokemanager = strokemanager;
@@ -50,13 +54,25 @@ export default class DrawTool implements Tool {
       let snap = this.beammanager.getClosestPointOnBeams(p.world);
       if (snap) {
         if (Vec.dist(snap, p.world) < 20) {
-          this.position = Vec.lerp(p.world, snap, this.neatify);
+          this.position = Vec.lerp(p.world, snap, this.snappify);
         }
       }
     }
   }
 
   onMouseDrag(p: MouseData): void {
+    if (this.setneatify) {
+      this.neatify += p.delta.y / 100;
+      if (this.neatify > 2) {
+        this.neatify = 2;
+      } else if (this.neatify < -0.5) {
+        this.neatify = -0.5;
+      }
+
+      console.log(this.neatify);
+      this.neatifyStroke();
+      return;
+    }
     if (this.stroke) {
       p.world = this.position;
       this.stroke.addPoint(p);
@@ -67,6 +83,7 @@ export default class DrawTool implements Tool {
     if (this.stroke) {
       this.stroke = null;
     }
+    this.setneatify = false;
   }
 
   onKeyDown(key: string): void {
@@ -86,12 +103,26 @@ export default class DrawTool implements Tool {
       const firstPoint = this.beammanager.findOrAddControlPoint(start).id;
       const secondPoint = this.beammanager.findOrAddControlPoint(end).id;
       this.beammanager.addBeam([firstPoint, secondPoint]);
+      this.beammanager.findAreas();
+
+      this.savedPoints = this.stroke.points.map((p) => {
+        return { x: p.x, y: p.y };
+      });
+      this.setneatify = true;
+      this.neatifyStroke();
+    }
+  }
+
+  neatifyStroke() {
+    if (this.stroke) {
+      const start = this.savedPoints[0];
+      const end = this.savedPoints[this.savedPoints.length - 1];
 
       // project onto perfect line
       const line = Line(start, end);
 
-      for (let i = 0; i < this.stroke.points.length; i++) {
-        const point = this.stroke.points[i];
+      for (let i = 0; i < this.savedPoints.length; i++) {
+        const point = this.savedPoints[i];
         const t = Line.projectPoint(line, point).t;
         const snap = Line.pointAtT(line, t);
         const snapedPoint = Vec.lerp(point, snap, this.neatify);
