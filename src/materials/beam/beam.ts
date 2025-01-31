@@ -39,15 +39,21 @@ export default class Beam {
       const projection = Line.projectPoint(segment, p);
 
       // If projection.t is between 0 and 1, the closest point is on this segment
-      //if (projection.t >= 0 && projection.t <= 1) {
-      const pointOnSegment = Line.pointAtT(segment, projection.t);
-      const distance = Vec.dist(p, pointOnSegment);
+      if (projection.t >= 0 && projection.t <= 1) {
+        const pointOnSegment = Line.pointAtT(segment, projection.t);
+        const distance = Vec.dist(p, pointOnSegment);
 
-      if (distance < minDistance) {
-        minDistance = distance;
-        closestPoint = pointOnSegment;
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestPoint = pointOnSegment;
+        }
+      } else {
+        if(projection.t < 0) {
+          return this.pathPoints[0]
+        } else {
+          return this.pathPoints[1];
+        }
       }
-      //}
     }
 
     return closestPoint;

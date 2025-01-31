@@ -148,6 +148,24 @@ export default class BeamManager {
     return closestBeam;
   }
 
+  getClosestPointOnBeams(p: Point): Point | null {
+    let closestPoint: Point | null = null;
+    let minDistance = Infinity;
+
+    for (const beam of this.beams.values()) {
+      const point = beam.closestPointOnBeam(p);
+      if (point) {
+        const distance = Vec.dist(p, point);
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestPoint = point;
+        }
+      }
+    }
+
+    return closestPoint;
+  }
+
   // AREAS
   addArea(cycle: Array<Id>): Area {
     const area = new Area(cycle);
@@ -400,19 +418,19 @@ export default class BeamManager {
         r.circle(point.x, point.y, 5, fill("#00FF00"));
         // let hasIntersection = false;
         for (const corner of area.polyPoints) {
-        //   const ray = Line(corner, point);
-        //   for (let i = 0; i < area.polyPoints.length; i++) {
-        //     const start = area.polyPoints[i];
-        //     const end = area.polyPoints[(i + 1) % area.polyPoints.length];
-        //     const pline = Line(start, end);
-        //     const offset = Line.intersectOffset(pline, ray)
-        //     if(offset && offset > 0 && offset < 1) {
-        //       hasIntersection = true;
-        //       break;
-        //     }
-        //   }
-        //   if (!hasIntersection) {
-            r.line(corner.x, corner.y, point.x, point.y, stroke("#00FF00", 0.5));
+          //   const ray = Line(corner, point);
+          //   for (let i = 0; i < area.polyPoints.length; i++) {
+          //     const start = area.polyPoints[i];
+          //     const end = area.polyPoints[(i + 1) % area.polyPoints.length];
+          //     const pline = Line(start, end);
+          //     const offset = Line.intersectOffset(pline, ray)
+          //     if(offset && offset > 0 && offset < 1) {
+          //       hasIntersection = true;
+          //       break;
+          //     }
+          //   }
+          //   if (!hasIntersection) {
+          r.line(corner.x, corner.y, point.x, point.y, stroke("#00FF00", 0.5));
           //}
         }
       }
